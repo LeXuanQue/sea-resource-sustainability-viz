@@ -1,6 +1,7 @@
 # Resource and Energy Sustainability: Vietnam vs. 7 Southeast Asian Countries
 
 **Course:** Data Visualization — International University, VNU-HCM (HCMIU)
+
 **Repository:** <https://github.com/LeXuanQue/sea-resource-sustainability-viz>
 
 | Member | Student ID | Responsibility |
@@ -12,11 +13,12 @@
 
 ## 1. Background and motivation
 
-Natural resources and energy are closely connected to the long-term sustainability of economic development. The World Bank's Sovereign ESG framework explicitly evaluates the environmental dimension of economic performance through a country's natural-resource endowment and management, while also considering sustainable energy use and security. This makes indicators such as forest resources, resource depletion, freshwater use, energy intensity, renewable energy and fossil-fuel dependence relevant dimensions for examining environmental sustainability. For Viet Nam, this topic is also directly relevant to national development objectives. Viet Nam's National Climate Change Strategy sets a target of net-zero greenhouse-gas emissions by 2050 and identifies resource management, forest protection, energy and land-use changes as important areas for climate action. The strategy also sets a 2050 target of maintaining forest cover at 43%. The World Bank records Viet Nam's forest area at 47.2% of land area in 2022; the two figures use different forest definitions and are not directly comparable.
+Natural resources and energy are closely tied to the long-term sustainability of economic development. The World Bank's Sovereign ESG framework evaluates the environmental dimension of economic performance through a country's natural-resource endowment and management alongside sustainable energy use, which makes forest resources, resource depletion, freshwater use, energy intensity, renewable energy and fossil-fuel dependence relevant dimensions of environmental sustainability. For Viet Nam the topic is also directly relevant to national policy: the National Climate Change Strategy targets net-zero greenhouse-gas emissions by 2050, identifies resource management, forest protection, energy and land-use change as priority areas, and sets a 2050 target of maintaining forest cover at 43%. The World Bank records Viet Nam's forest area at 47.2% of land area in 2022; the two figures use different forest definitions and are not directly comparable.
 
-The energy dimension is particularly important because Viet Nam is experiencing strong growth in electricity demand while simultaneously expanding renewable generation. According to Ember, Viet Nam's electricity demand grew by an average of 8.2% per year between 2013 and 2024, and coal-based generation expanded over the same period to meet that rising demand; at the same time, Viet Nam recorded substantial growth in wind and solar generation. This situation reflects a broader regional challenge: Ember reported that coal supplied 45% of ASEAN electricity generation in 2024, while ASEAN's electricity demand continues to grow. Therefore, examining Viet Nam alone does not show its relative position within the regional context. Comparing Viet Nam with Indonesia, Thailand, Malaysia, the Philippines, Cambodia, Laos and Myanmar allows the project to reveal differences in resource conditions, resource pressure and energy-transition patterns without assuming that one indicator represents sustainability as a whole.
+The energy dimension matters because Viet Nam is seeing strong growth in electricity demand while expanding renewable generation. According to Ember, Viet Nam's electricity demand grew by an average of 8.2% per year between 2013 and 2024, and coal-based generation expanded over the same period to meet that rising demand; at the same time, Viet Nam recorded substantial growth in wind and solar generation. This reflects a wider regional challenge: Ember reported that coal supplied 45% of ASEAN electricity generation in 2024 while regional demand kept growing. Examining Viet Nam alone cannot show its position in that context, whereas comparing it with Indonesia, Thailand, Malaysia, the Philippines, Cambodia, Laos and Myanmar reveals differences in resource conditions, resource pressure and energy transition without assuming one indicator represents sustainability as a whole.
 
-A static report is less suitable for this problem because the project contains 12 indicators, 8 countries and multiple years, creating a multidimensional dataset that requires repeated comparisons across indicators, countries and time. An interactive web interface can therefore let users select an indicator, year or country and examine the corresponding trend and regional comparison directly. The aim is not to produce a single overall ranking of "sustainability", but to help viewers explore where Viet Nam stands, how its indicators have changed over time, and how these patterns compare with the selected Southeast Asian countries.
+A static report suits this poorly, because 12 indicators across 8 countries and many years form a multidimensional dataset needing repeated comparison across indicators, countries and time. An interactive interface lets users pick an indicator, year or country and read the trend and regional comparison directly. The aim is not a single overall ranking of "sustainability", but to help viewers explore where Viet Nam stands, how its indicators have moved, and how those patterns compare with its neighbours.
+
 
 ## 2. Objectives
 
@@ -30,44 +32,39 @@ Specifically, the interactive visualization is designed to answer the following 
 
 ## 3. Data: where and how we collect it
 
-All data comes from one public source: the World Bank Sovereign ESG dataset, downloaded once as a CSV (`WB_ESG_WIDEF.csv`, 239 economies, 71 core indicators, years 1960 to 2023). No scraping or API is needed, so the dataset is fixed and reproducible.
+All data comes from one public source: the World Bank Sovereign ESG dataset, downloaded once as a CSV (`WB_ESG_WIDEF.csv`, 239 economies, 71 core indicators, 1960–2023), so no scraping or API is needed and the dataset is fixed and reproducible. From it we keep 8 countries — Vietnam, Indonesia, Thailand, Malaysia, the Philippines, Cambodia, Laos and Myanmar — and 12 indicators from two Environment themes, all present for all 8 countries with coverage checked row by row.
 
-From it we keep 8 countries (Vietnam, Indonesia, Thailand, Malaysia, the Philippines, Cambodia, Laos, Myanmar) and 12 indicators from two Environment themes. All 12 exist for all 8 countries; coverage was checked row by row.
+<div class="cols2">
 
-| Group | Indicator | World Bank code | Unit | Years available |
-| --- | --- | --- | --- | --- |
-| Natural resources | Forest area | AG.LND.FRST.ZS | % of land area | 1990–2022 |
-| Natural resources | Tree cover loss | AG.LND.FRLS.HA | hectares | 2002–2021 |
-| Natural resources | Terrestrial and marine protected areas | ER.PTD.TOTL.ZS | % of territorial area | 2013–2023 |
-| Natural resources | Natural resources depletion | NY.ADJ.DRES.GN.ZS | % of GNI | 1990–2021 |
-| Natural resources | Net forest depletion | NY.ADJ.DFOR.GN.ZS | % of GNI | 1990–2021 |
-| Natural resources | Annual freshwater withdrawals | ER.H2O.FWTL.ZS | % of internal resources | 1990–2021 |
-| Energy | Energy intensity of primary energy | EG.EGY.PRIM.PP.KD | MJ per $2017 PPP GDP | 2000–2022 |
-| Energy | Renewable energy consumption | EG.FEC.RNEW.ZS | % of final energy | 1990–2022 |
-| Energy | Renewable electricity output | EG.ELC.RNEW.ZS | % of electricity | 1990–2021 |
-| Energy | Energy use per person | EG.USE.PCAP.KG.OE | kg of oil equivalent | 1990–2022 |
-| Energy | Fossil fuel energy consumption | EG.USE.COMM.FO.ZS | % of total energy | 1990–2022 |
-| Energy | Electricity from coal | EG.ELC.COAL.ZS | % of electricity | 1990–2022 |
+| Natural resources (code) | Unit, years |
+| --- | --- |
+| Forest area (AG.LND.FRST.ZS) | % of land area, 1990–2022 |
+| Tree cover loss (AG.LND.FRLS.HA) | hectares, 2002–2021 |
+| Protected areas, land and marine (ER.PTD.TOTL.ZS) | % of territory, 2013–2023 |
+| Natural resources depletion (NY.ADJ.DRES.GN.ZS) | % of GNI, 1990–2021 |
+| Net forest depletion (NY.ADJ.DFOR.GN.ZS) | % of GNI, 1990–2021 |
+| Freshwater withdrawals (ER.H2O.FWTL.ZS) | % of internal res., 1990–2021 |
 
-Coverage is uneven for four countries. Cambodia starts in 1995 on most series and Laos in 2000 on energy use, fossil fuel and coal. Freshwater withdrawals start in 2005–2007 for Laos, the Philippines, Cambodia and Thailand. Laos reports renewable electricity for only 10 scattered years between 2001 and 2021.
+| Energy (code) | Unit, years |
+| --- | --- |
+| Energy intensity (EG.EGY.PRIM.PP.KD) | MJ / $2017 PPP GDP, 2000–2022 |
+| Renewable energy consumption (EG.FEC.RNEW.ZS) | % of final energy, 1990–2022 |
+| Renewable electricity output (EG.ELC.RNEW.ZS) | % of electricity, 1990–2021 |
+| Energy use per person (EG.USE.PCAP.KG.OE) | kg oil equivalent, 1990–2022 |
+| Fossil fuel consumption (EG.USE.COMM.FO.ZS) | % of total energy, 1990–2022 |
+| Electricity from coal (EG.ELC.COAL.ZS) | % of electricity, 1990–2022 |
 
-Source: [World Bank Sovereign ESG Data Portal](https://esgdata.worldbank.org/data/framework).
+</div>
+
+Coverage is uneven for four countries: Cambodia starts in 1995 on most series and Laos in 2000 on energy use, fossil fuel and coal; freshwater withdrawals start in 2005–2007 for Laos, the Philippines, Cambodia and Thailand; and Laos reports renewable electricity for only 10 scattered years between 2001 and 2021. Source: [World Bank Sovereign ESG Data Portal](https://esgdata.worldbank.org/data/framework).
+
 
 ## 4. Data processing
 
-A short Python script turns the wide CSV into three static JSON files that the website reads directly; nothing is computed in the browser except filtering.
+A short Python script turns the wide CSV into three static JSON files the site reads directly; nothing is computed in the browser except filtering. **(1) Filter** to the 8 countries, the 12 indicators above and years 1990–2023. **(2) Reshape** from wide form to long form: one row per country, indicator, year and value. **(3) Keep gaps as gaps** — a missing value is stored as `null`, never 0, and charts never interpolate across it; a late-starting series gets a hollow start marker and an isolated year a single dot. **(4) Flag repeated values** — some series repeat one estimate for years, as Vietnam's freshwater withdrawals sit at exactly 22.78% from 2005 to 2021; these runs are drawn lighter so they are not read as new measurements. **(5) Choose the year shown** — each indicator defaults to its latest year with at least 6 of the 8 countries reporting (2021, 2022 or 2023), printed beside every value. **(6) Regional reference = median** — with 8 countries of very different size one can drag the mean far (freshwater: mean 11.0%, median 7.4%), so the median of those reporting that year is used everywhere; on trend charts it uses only countries with continuous data in the window shown, so it does not jump when a country enters. **(7) Direction and rank** — each indicator is tagged "higher is better" or "lower is better" and ranks are direction-adjusted, so rank 1 is always the best outcome; energy use per person has no agreed direction, so it gets no verdict and no rank. **(8) Verdict** — Vietnam is "better" or "worse" by its position against the median and "level" within 3% of it; change since 2010 is judged separately, because the two can disagree. **(9) Export** `values.json` (long form), `snapshot.json` (latest value, median and rank per indicator) and `coverage.json` (first year, last year and gaps per country).
 
-1. **Filter.** Keep the 8 countries and 12 indicators above, years 1990–2023.
-2. **Reshape.** Convert from wide (one column per year) to long form: one row per country, indicator, year and value.
-3. **Keep gaps as gaps.** A missing value is stored as `null`, never 0, and charts never interpolate across it. A series that starts late gets a hollow start marker; an isolated year is drawn as a single dot.
-4. **Flag repeated values.** Some series repeat one estimate for many years. Vietnam's freshwater withdrawals stay at exactly 22.78% from 2005 to 2021, and the 1990–2005 values rise in equal steps. These runs are flagged as "repeats the last estimate" and drawn lighter, so they are not read as new measurements.
-5. **Choose the year shown.** Each indicator defaults to its latest year with at least 6 of the 8 countries reporting (2021, 2022 or 2023 depending on the indicator). The year is printed beside every value.
-6. **Regional reference = median.** With only 8 countries of very different size, one country can drag the mean far (freshwater: mean 11.0%, median 7.4%). The median of the countries reporting that year is used everywhere. On trend charts it is computed only from countries with continuous data in the window shown, so it does not jump when a country enters the series.
-7. **Direction and rank.** Each indicator is tagged "higher is better" or "lower is better". Ranks are direction-adjusted, so rank 1 is always the best outcome for sustainability. Energy use per person has no agreed direction, so it gets no verdict and no rank.
-8. **Verdict.** Vietnam is "better" or "worse" than the region by its position against the median, and "level" when it is within 3% of it. Change since 2010 is judged separately, because the two can disagree.
-9. **Export.** Three JSON files: `values.json` (long form), `snapshot.json` (latest value, median and rank per indicator) and `coverage.json` (first year, last year and gaps per country).
+**Known limitations.** Tree cover loss is in hectares, so larger countries look worse by construction; protected areas has no 2010 baseline; all values are national averages.
 
-**Known limitations.** Tree cover loss is in hectares, so larger countries look worse by construction; a land-area denominator (World Bank WDI, AG.LND.TOTL.K2) would fix this but is outside the ESG dataset. Protected areas starts only in 2013, so it has no 2010 baseline. Values are national averages and say nothing about regions inside each country.
 
 ## 5. Visualization design: three alternative prototypes
 
@@ -124,55 +121,46 @@ Nothing is missing from the required checklist: all three levels are present wit
 
 ## 6. Must-have and optional features
 
-Must-have features are what the working prototype (week 6) needs to answer the research questions; optional features are added only if time allows after week 7.
+Must-have features are what the week-6 prototype needs to answer the research questions; optional features follow only if time allows after week 7.
 
-**Must-have**
+**Must-have.** **M1 Region level** — ranked bar list of the 8 countries for one indicator and year, regional median marked. **M2 Country level** — all 12 indicators for one country, each with its rank among the 8 and its verdict against the median. **M3 Indicator level** — trend line from 1990, selected country highlighted, regional median dashed. **M4 Shared controls** — indicator selector, country selector and year slider, every panel updating together. **M5 Drill-down** — clicking a country in the ranking opens its country view; a back control returns. **M6 Tooltips** — country, year, value and unit on every mark. **M7 Missing data** — shown explicitly ("no data", line breaks, hatching), never as zero. **M8 Provenance** — units on every chart and the World Bank ESG source on the page. **M9 Delivery** — static site on GitHub Pages, no backend.
 
-- **M1 — Region level:** ranked bar list of the 8 countries for one indicator and year, with the regional median marked.
-- **M2 — Country level:** all 12 indicators for one country, each showing its position among the 8 and its verdict against the median.
-- **M3 — Indicator level:** trend line from 1990, the selected country highlighted, the regional median as a dashed line.
-- **M4 — Shared controls:** indicator selector, country selector and year slider, with every panel updating together.
-- **M5 — Drill-down:** clicking a country in the ranking opens its country view; a back control returns to Vietnam.
-- **M6 — Tooltips:** hover tooltips naming the country, year, value and unit on every mark.
-- **M7 — Missing data:** shown explicitly ("no data", breaks in lines, hatched cells), never drawn as zero.
-- **M8 — Provenance:** units on every chart and the World Bank Sovereign ESG source on the page.
-- **M9 — Delivery:** static site on GitHub Pages, no backend.
+Every research question is answered by at least one must-have: **RQ1** by M3 and M2, **RQ2** by M1, M4 and M5, **RQ3** by M3 and M2.
 
-Each research question is answered by at least one must-have feature: **RQ1** by M3 and M2, **RQ2** by M1, M4 and M5, and **RQ3** by M3 and M2.
+**Optional.** Opening story section with the three headline findings; orientation map beside the ranking; collapsible details section with the full indicator table and per-country coverage; animated transitions on year or indicator change; shareable links that keep the selection in the URL; Vietnamese and English interface versions.
 
-**Optional**
-
-- Opening story section with the three headline findings.
-- Orientation map of Southeast Asia beside the ranking.
-- Collapsible details section: full indicator table and data coverage per country.
-- Animated transitions when the year or indicator changes.
-- Shareable links that keep the current selection in the URL.
-- Vietnamese and English versions of the interface.
 
 ## 7. Project schedule
 
-Ten weeks from Monday 5 October 2026, with the working prototype due in week 6 and the final submission in week 10. The full week-by-week plan is in the repository at `docs/project-schedule.md`.
+Ten weeks from Monday 5 October 2026; the full plan with per-member tasks is in the repository at `docs/project-schedule.md`.
 
-| Week | Dates | Milestone | Lead |
-| --- | --- | --- | --- |
-| 1 | Oct 5–11 | Kickoff: repo, proposal, sketches | All |
-| 2 | Oct 12–18 | Choose the design; JSON schema; page skeleton | All |
-| 3 | Oct 19–25 | JSON v1; region-level chart; shared controls | Trần Nguyễn Lê Quân, Lê Xuân Quế, Đặng Hoàng Quân |
-| 4 | Oct 26–Nov 1 | Country and indicator levels; drill-down and tooltips | Lê Xuân Quế, Đặng Hoàng Quân |
-| 5 | Nov 2–8 | Midterm week: integration and bug fixes | All |
-| 6 | Nov 9–15 | **Working prototype due**, deployed on GitHub Pages | All |
-| 7 | Nov 16–22 | Feedback and improvements | All |
-| 8 | Nov 23–29 | Optional features; report sections | All |
-| 9 | Nov 30–Dec 6 | Feature freeze, testing, report draft | All |
-| 10 | Dec 7–13 | **Final submission** | All |
+<div class="cols2">
 
-Weeks 1–2 include time for the team to learn D3.js, since no member has built a frontend before.
+| Wk | Milestone (week beginning) |
+| --- | --- |
+| 1 | Oct 5 — kickoff: repo, proposal, sketches |
+| 2 | Oct 12 — choose design; JSON schema; page skeleton |
+| 3 | Oct 19 — JSON v1; region chart; shared controls |
+| 4 | Oct 26 — country and indicator levels; drill-down |
+| 5 | Nov 2 — midterm: integration and bug fixes |
+
+| Wk | Milestone (week beginning) |
+| --- | --- |
+| 6 | Nov 9 — **working prototype due**, on GitHub Pages |
+| 7 | Nov 16 — feedback and improvements |
+| 8 | Nov 23 — optional features; report sections |
+| 9 | Nov 30 — feature freeze, testing, report draft |
+| 10 | Dec 7 — **final submission** |
+
+</div>
+
+Weeks 3–4 are led by Trần Nguyễn Lê Quân (data) with Lê Xuân Quế and Đặng Hoàng Quân (frontend); all other weeks are shared. Weeks 1–2 include time to learn D3.js, as no member has built a frontend before.
+
 
 ## 8. Sources
 
-- World Bank — Sovereign ESG Data Framework: <https://esgdata.worldbank.org/data/framework>
-- World Bank — About the Sovereign ESG Data Portal
-- Chính phủ Việt Nam — Chiến lược quốc gia về biến đổi khí hậu đến năm 2050 (National Climate Change Strategy to 2050)
-- Ember — ASEAN electricity data and regional transition
-- Ember — From emission-intensive to investment hotspots: championing renewables in 3 ASEAN economies: <https://ember-energy.org/latest-insights/from-emission-intensive-to-investment-hotspots-championing-renewables-in-3-asean-economies/country-snapshots-and-opportunities/>
-- Segel, E. and Heer, J. (2010). Narrative Visualization: Telling Stories with Data. *IEEE Transactions on Visualization and Computer Graphics*, 16(6).
+<div class="refs">
+
+World Bank — Sovereign ESG Data Framework and About the Sovereign ESG Data Portal: <https://esgdata.worldbank.org/data/framework>. Chính phủ Việt Nam — Chiến lược quốc gia về biến đổi khí hậu đến năm 2050 (National Climate Change Strategy to 2050). Ember — ASEAN electricity data and regional transition. Ember — From emission-intensive to investment hotspots: championing renewables in 3 ASEAN economies: <https://ember-energy.org/latest-insights/from-emission-intensive-to-investment-hotspots-championing-renewables-in-3-asean-economies/country-snapshots-and-opportunities/>. Segel, E. and Heer, J. (2010). Narrative Visualization: Telling Stories with Data. *IEEE Transactions on Visualization and Computer Graphics*, 16(6).
+
+</div>
