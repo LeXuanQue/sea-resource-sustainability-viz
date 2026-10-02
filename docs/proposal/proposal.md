@@ -1,7 +1,7 @@
 <div class="titleblock">
 
 <p class="t1">PROJECT PROPOSAL</p>
-<p class="t2">Data Visualization</p>
+<p class="t2">IT138IU – Data Science and Data Visualization</p>
 <p class="t3">Resource and Energy Sustainability: Vietnam vs. 7 Southeast Asian Countries</p>
 
 </div>
