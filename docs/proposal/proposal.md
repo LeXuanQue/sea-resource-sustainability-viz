@@ -17,9 +17,9 @@ Repository: https://github.com/LeXuanQue/sea-resource-sustainability-viz
 
 ## 1. Background and motivation
 
-The World Bank's Sovereign ESG framework evaluates the environmental dimension of economic performance through natural-resource endowment and management alongside sustainable energy use [1], which makes forest resources, resource depletion, freshwater use, energy intensity, renewable energy and fossil-fuel dependence relevant dimensions of environmental sustainability. For Viet Nam this is also national policy: the National Climate Change Strategy targets net-zero greenhouse-gas emissions by 2050 and a 2050 forest cover target of 43% [3]. The World Bank records Viet Nam's forest area at 47.2% of land area in 2022 [1]; the two figures use different forest definitions and are not directly comparable.
+The World Bank's Sovereign ESG framework evaluates the environmental dimension of economic performance through natural-resource endowment and management alongside sustainable energy use [1], which makes forest resources, resource depletion, freshwater use, energy intensity, renewable energy and fossil-fuel dependence relevant dimensions of environmental sustainability. For Viet Nam this is also national policy: the National Climate Change Strategy targets net-zero greenhouse-gas emissions by 2050 and a 2050 forest cover target of 43% [2]. The World Bank records Viet Nam's forest area at 47.2% of land area in 2022 [1]; the two figures use different forest definitions and are not directly comparable.
 
-According to Ember, Viet Nam's electricity demand grew by an average of 8.2% per year between 2013 and 2024, and coal-based generation expanded over the same period to meet it, while wind and solar also grew substantially [5]; across the region, coal supplied 45% of ASEAN electricity generation in 2024 [4]. Viet Nam alone therefore cannot show its position, whereas comparing it with Indonesia, Thailand, Malaysia, the Philippines, Cambodia, Laos and Myanmar reveals differences in resource conditions, resource pressure and energy transition without assuming one indicator represents sustainability as a whole.
+According to Ember, Viet Nam's electricity demand grew by an average of 8.2% per year between 2013 and 2024, and coal-based generation expanded over the same period to meet it, while wind and solar also grew substantially [3]; across the region, coal supplied 45% of ASEAN electricity generation in 2024 [3]. Viet Nam alone therefore cannot show its position, whereas comparing it with Indonesia, Thailand, Malaysia, the Philippines, Cambodia, Laos and Myanmar reveals differences in resource conditions, resource pressure and energy transition without assuming one indicator represents sustainability as a whole.
 
 A static report suits this poorly: an interactive interface lets users pick an indicator, year or country and read the trend and regional comparison directly, rather than producing a single composite sustainability score.
 
@@ -33,7 +33,7 @@ This project aims to develop an interactive web-based visualization for explorin
 
 ## 3. Data
 
-**Data source:** One public source, the World Bank Sovereign ESG dataset [1], [2], downloaded once as a CSV (`WB_ESG_WIDEF.csv`, 239 economies, 71 core indicators, 1960–2023), so no scraping or API is needed and the dataset is fixed and reproducible.
+**Data source:** One public source, the World Bank Sovereign ESG dataset [1], downloaded once as a CSV (`WB_ESG_WIDEF.csv`, 239 economies, 71 core indicators, 1960–2023), so no scraping or API is needed and the dataset is fixed and reproducible.
 
 **Scope:** 8 countries (Vietnam, Indonesia, Thailand, Malaysia, the Philippines, Cambodia, Laos and Myanmar) and 12 indicators from two Environment themes, all present for all 8 countries, with coverage checked row by row. Indicator codes are listed in the repository README.
 
@@ -76,7 +76,7 @@ All three designs answer the same question with the same three levels (region, o
 
 ### 5.1 Design A: story first, then explore
 
-The page opens as a short explanation and only then hands control to the reader, following the "martini glass" structure of narrative visualization [6] (Figure 1). A hero states the question, a one-sentence answer and three headline numbers with a better or worse tag: forest area +18.4 points since 1990, renewable energy share −51.7 points since 1990, and 2.9% of territory protected. Three story blocks follow, each with a conclusion as its title, one chart and two sentences. An explore section then gives shared indicator, country and year controls driving a ranked bar list with an orientation map, a dot plot of all 12 indicators for the selected country, and a trend line against the regional median; clicking a country drills down and a back control returns (Figure 2). Only Vietnam is coloured, and better and worse carry symbol, word and colour together.
+The page opens as a short explanation and only then hands control to the reader, following the "martini glass" structure of narrative visualization [4] (Figure 1). A hero states the question, a one-sentence answer and three headline numbers with a better or worse tag: forest area +18.4 points since 1990, renewable energy share −51.7 points since 1990, and 2.9% of territory protected. Three story blocks follow, each with a conclusion as its title, one chart and two sentences. An explore section then gives shared indicator, country and year controls driving a ranked bar list with an orientation map, a dot plot of all 12 indicators for the selected country, and a trend line against the regional median; clicking a country drills down and a back control returns (Figure 2). Only Vietnam is coloured, and better and worse carry symbol, word and colour together.
 
 **Strengths:** a reader who never touches a control still gets the main message, and every chart uses position or length. **Weaknesses:** the page is long, and the story blocks must be rewritten if the data changes.
 
@@ -128,20 +128,15 @@ Added only if time allows after week 7.
 
 ## 8. Project schedule
 
-Ten weeks from Monday 5 October 2026; the full per-member plan is in the repository at `docs/project-schedule.md`.
+Ten weeks from Monday 5 October 2026; the week-by-week plan is in the repository at `docs/project-schedule.md`.
 
 | Week | Milestone |
 | --- | --- |
-| 1 | Kickoff: repo, proposal, sketches |
-| 2 | Design chosen; JSON schema; skeleton |
-| 3 | JSON v1; region chart; controls |
-| 4 | Country and indicator levels; drill-down |
-| 5 | Midterm: integration and bug fixes |
-| 6 | **Working prototype due**, on GitHub Pages |
-| 7 | Feedback and improvements |
-| 8 | Optional features; report sections |
-| 9 | Feature freeze, testing, report |
-| 10 | **Final submission** |
+| 1–2 | Kickoff, proposal, design choice, JSON schema, page skeleton |
+| 3–4 | JSON v1; region, country and indicator levels; shared controls; drill-down |
+| 5–6 | Midterm integration and bug fixes; **working prototype due** (week 6) |
+| 7–8 | Feedback, improvements, optional features, report sections |
+| 9–10 | Feature freeze, testing, report; **final submission** (week 10) |
 
 Weeks 3–4 are led by Trần Nguyễn Lê Quân (data), Lê Xuân Quế and Đặng Hoàng Quân (frontend); all other weeks are shared. Weeks 1–2 include time to learn D3.js, as no member has built a frontend before.
 
@@ -151,14 +146,10 @@ Weeks 3–4 are led by Trần Nguyễn Lê Quân (data), Lê Xuân Quế and Đ�
 
 [1] World Bank. Sovereign ESG Data Framework. https://esgdata.worldbank.org/data/framework, accessed 2 October 2026.
 
-[2] World Bank. About the Sovereign ESG Data Portal. https://esgdata.worldbank.org/about/aboutus?lang=en, accessed 2 October 2026.
+[2] Chính phủ Việt Nam. 2022. Chiến lược quốc gia về biến đổi khí hậu đến năm 2050 (National Climate Change Strategy to 2050). https://xaydungchinhsach.chinhphu.vn/phe-duyet-chien-luoc-quoc-gia-ve-bien-doi-khi-hau-den-nam-2050-119220727070101019.htm, accessed 2 October 2026.
 
-[3] Chính phủ Việt Nam. 2022. Chiến lược quốc gia về biến đổi khí hậu đến năm 2050 (National Climate Change Strategy to 2050). https://xaydungchinhsach.chinhphu.vn/phe-duyet-chien-luoc-quoc-gia-ve-bien-doi-khi-hau-den-nam-2050-119220727070101019.htm, accessed 2 October 2026.
+[3] Ember. From emission-intensive to investment hotspots: championing renewables in 3 ASEAN economies. https://ember-energy.org/latest-insights/from-emission-intensive-to-investment-hotspots-championing-renewables-in-3-asean-economies/country-snapshots-and-opportunities/, accessed 2 October 2026.
 
-[4] Ember. Electricity Data Explorer. https://ember-energy.org/data/electricity-data-explorer/, accessed 2 October 2026.
-
-[5] Ember. From emission-intensive to investment hotspots: championing renewables in 3 ASEAN economies. https://ember-energy.org/latest-insights/from-emission-intensive-to-investment-hotspots-championing-renewables-in-3-asean-economies/country-snapshots-and-opportunities/, accessed 2 October 2026.
-
-[6] Segel, E. and Heer, J. 2010. Narrative Visualization: Telling Stories with Data. IEEE Transactions on Visualization and Computer Graphics 16(6).
+[4] Segel, E. and Heer, J. 2010. Narrative Visualization: Telling Stories with Data. IEEE Transactions on Visualization and Computer Graphics 16(6).
 
 </div>

@@ -31,7 +31,7 @@ FIGURES = [
 PORTRAIT = {1, 2, 5}
 
 TEXT_CSS = f"""
-@page {{ size: A4; margin: 2.54cm; }}
+@page {{ size: A4; margin: 2.0cm; }}
 * {{ box-sizing: border-box; }}
 body {{ font-family: {SERIF}; font-size: 12pt; line-height: 1.15; color: #000;
         background: #fff; margin: 0; text-align: justify; }}
