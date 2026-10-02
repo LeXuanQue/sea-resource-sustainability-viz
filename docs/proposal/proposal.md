@@ -35,7 +35,7 @@ This project aims to develop an interactive web-based visualization for explorin
 
 **Data source:** One public source, the World Bank Sovereign ESG dataset [1], [2], downloaded once as a CSV (`WB_ESG_WIDEF.csv`, 239 economies, 71 core indicators, 1960–2023), so no scraping or API is needed and the dataset is fixed and reproducible.
 
-**Scope:** 8 countries — Vietnam, Indonesia, Thailand, Malaysia, the Philippines, Cambodia, Laos and Myanmar — and 12 indicators from two Environment themes, all present for all 8 countries, with coverage checked row by row.
+**Scope:** 8 countries (Vietnam, Indonesia, Thailand, Malaysia, the Philippines, Cambodia, Laos and Myanmar) and 12 indicators from two Environment themes, all present for all 8 countries, with coverage checked row by row.
 
 | Group | Indicator | Code | Unit | Years |
 | --- | --- | --- | --- | --- |
@@ -72,7 +72,7 @@ A Python script turns the wide CSV into three static JSON files the site reads d
 
 ## 5. Visualization design
 
-All three designs answer the same question with the same three levels — region, one country, one indicator over time — and differ in how the reader moves between them. The six sketches are in the appendix.
+All three designs answer the same question with the same three levels (region, one country, one indicator over time) and differ in how the reader moves between them. The six sketches are in the appendix.
 
 ### 5.1 Design A: story first, then explore
 
