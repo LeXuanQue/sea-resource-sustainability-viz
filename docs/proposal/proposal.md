@@ -35,22 +35,22 @@ This project aims to develop an interactive web-based visualization for explorin
 
 **Data source:** One public source, the World Bank Sovereign ESG dataset [1], [2], downloaded once as a CSV (`WB_ESG_WIDEF.csv`, 239 economies, 71 core indicators, 1960–2023), so no scraping or API is needed and the dataset is fixed and reproducible.
 
-**Scope:** 8 countries (Vietnam, Indonesia, Thailand, Malaysia, the Philippines, Cambodia, Laos and Myanmar) and 12 indicators from two Environment themes, all present for all 8 countries, with coverage checked row by row.
+**Scope:** 8 countries (Vietnam, Indonesia, Thailand, Malaysia, the Philippines, Cambodia, Laos and Myanmar) and 12 indicators from two Environment themes, all present for all 8 countries, with coverage checked row by row. Indicator codes are listed in the repository README.
 
-| Group | Indicator | Code | Unit | Years |
-| --- | --- | --- | --- | --- |
-| Resources | Forest area | AG.LND.FRST.ZS | % of land area | 1990–2022 |
-| Resources | Tree cover loss | AG.LND.FRLS.HA | hectares | 2002–2021 |
-| Resources | Protected areas | ER.PTD.TOTL.ZS | % of territory | 2013–2023 |
-| Resources | Resource depletion | NY.ADJ.DRES.GN.ZS | % of GNI | 1990–2021 |
-| Resources | Net forest depletion | NY.ADJ.DFOR.GN.ZS | % of GNI | 1990–2021 |
-| Resources | Freshwater withdrawals | ER.H2O.FWTL.ZS | % of internal res. | 1990–2021 |
-| Energy | Energy intensity | EG.EGY.PRIM.PP.KD | MJ/$2017 PPP GDP | 2000–2022 |
-| Energy | Renewable energy | EG.FEC.RNEW.ZS | % of final energy | 1990–2022 |
-| Energy | Renewable electricity | EG.ELC.RNEW.ZS | % of electricity | 1990–2021 |
-| Energy | Energy use per person | EG.USE.PCAP.KG.OE | kg oil equivalent | 1990–2022 |
-| Energy | Fossil fuel use | EG.USE.COMM.FO.ZS | % of total energy | 1990–2022 |
-| Energy | Electricity from coal | EG.ELC.COAL.ZS | % of electricity | 1990–2022 |
+| Group | Indicator | Unit | Years |
+| --- | --- | --- | --- |
+| Resources | Forest area | % of land area | 1990–2022 |
+| Resources | Tree cover loss | hectares | 2002–2021 |
+| Resources | Protected areas | % of territory | 2013–2023 |
+| Resources | Resource depletion | % of GNI | 1990–2021 |
+| Resources | Net forest depletion | % of GNI | 1990–2021 |
+| Resources | Freshwater withdrawals | % of internal res. | 1990–2021 |
+| Energy | Energy intensity | MJ/$2017 PPP GDP | 2000–2022 |
+| Energy | Renewable energy | % of final energy | 1990–2022 |
+| Energy | Renewable electricity | % of electricity | 1990–2021 |
+| Energy | Energy use per person | kg oil equivalent | 1990–2022 |
+| Energy | Fossil fuel use | % of total energy | 1990–2022 |
+| Energy | Electricity from coal | % of electricity | 1990–2022 |
 
 **Coverage:** Uneven for four countries: Cambodia starts in 1995 on most series and Laos in 2000 on energy use, fossil fuel and coal; freshwater withdrawals start in 2005–2007 for Laos, the Philippines, Cambodia and Thailand; and Laos reports renewable electricity for only 10 scattered years between 2001 and 2021.
 
@@ -130,20 +130,20 @@ Added only if time allows after week 7.
 
 Ten weeks from Monday 5 October 2026; the full per-member plan is in the repository at `docs/project-schedule.md`.
 
-| Week | Dates | Milestone | Lead |
-| --- | --- | --- | --- |
-| 1 | Oct 5–11 | Kickoff: repo, proposal, sketches | All |
-| 2 | Oct 12–18 | Design chosen; JSON schema; skeleton | All |
-| 3 | Oct 19–25 | JSON v1; region chart; controls | Lê Quân, Quế, Hoàng Quân |
-| 4 | Oct 26–Nov 1 | Country and indicator levels; drill-down | Quế, Hoàng Quân |
-| 5 | Nov 2–8 | Midterm: integration and bug fixes | All |
-| 6 | Nov 9–15 | **Working prototype due**, on GitHub Pages | All |
-| 7 | Nov 16–22 | Feedback and improvements | All |
-| 8 | Nov 23–29 | Optional features; report sections | All |
-| 9 | Nov 30–Dec 6 | Feature freeze, testing, report | All |
-| 10 | Dec 7–13 | **Final submission** | All |
+| Week | Milestone |
+| --- | --- |
+| 1 | Kickoff: repo, proposal, sketches |
+| 2 | Design chosen; JSON schema; skeleton |
+| 3 | JSON v1; region chart; controls |
+| 4 | Country and indicator levels; drill-down |
+| 5 | Midterm: integration and bug fixes |
+| 6 | **Working prototype due**, on GitHub Pages |
+| 7 | Feedback and improvements |
+| 8 | Optional features; report sections |
+| 9 | Feature freeze, testing, report |
+| 10 | **Final submission** |
 
-Weeks 1–2 include time to learn D3.js, as no member has built a frontend before.
+Weeks 3–4 are led by Trần Nguyễn Lê Quân (data), Lê Xuân Quế and Đặng Hoàng Quân (frontend); all other weeks are shared. Weeks 1–2 include time to learn D3.js, as no member has built a frontend before.
 
 ## References
 

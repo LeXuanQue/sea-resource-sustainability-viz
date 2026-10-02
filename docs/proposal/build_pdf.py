@@ -53,7 +53,7 @@ ul {{ margin: 0 0 6pt; padding-left: 18pt; }}
 li {{ margin-bottom: 1.5pt; text-align: justify; }}
 code {{ font-family: "Liberation Mono", monospace; font-size: 10.5pt; }}
 a {{ color: #000; text-decoration: none; word-break: break-all; }}
-.refs {{ font-size: 10.5pt; }}
+.refs {{ font-size: 10pt; line-height: 1; }}
 .refs p {{ margin: 0 0 2.5pt; }}
 """
 
