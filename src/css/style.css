@@ -1,0 +1,20 @@
+/* Initial style skeleton. Trúc Phương finalizes the palette and fonts, Xuân Quế updates them here. */
+:root {
+  --color-bg: #ffffff;
+  --color-text: #1a1a1a;
+  --color-highlight: #d62828; /* Vietnam */
+  --color-no-data: #c8c8c8;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+header, main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px;
+}
