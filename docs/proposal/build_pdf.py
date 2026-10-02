@@ -48,6 +48,7 @@ table {{ width: 100%; border-collapse: collapse; font-size: 11pt; margin: 5pt 0 
 th, td {{ border: 0.75pt solid #000; padding: 1.4pt 4pt; text-align: left; vertical-align: top; }}
 th {{ font-weight: bold; }}
 tr {{ break-inside: avoid; page-break-inside: avoid; }}
+table {{ break-inside: avoid; page-break-inside: avoid; }}
 ul {{ margin: 0 0 6pt; padding-left: 18pt; }}
 li {{ margin-bottom: 1.5pt; text-align: justify; }}
 code {{ font-family: "Liberation Mono", monospace; font-size: 10.5pt; }}
@@ -87,9 +88,9 @@ parts = [text_pdf]
 for i in range(1, 7):
     portrait = i in PORTRAIT
     size   = "A4 portrait" if portrait else "A4 landscape"
-    margin = "2cm"
+    margin = "1.2cm"
     cap_mm = 16 if i == 1 else 12          # first page also carries the appendix heading
-    maxh   = (297 - 40 - cap_mm) if portrait else (210 - 40 - cap_mm)
+    maxh   = (297 - 24 - cap_mm) if portrait else (210 - 24 - cap_mm)
     b64 = base64.b64encode(open(os.path.join(SK, f"sketch-{i}.png"), "rb").read()).decode()
     head = ('<p class="apxh">Appendix: Prototype sketches</p>' if i == 1 else '')
     css = (f"@page {{ size: {size}; margin: {margin}; }}"
@@ -122,10 +123,12 @@ def build_docx():
     with zipfile.ZipFile(ref) as z: z.extractall(tmpd)
     sp = os.path.join(tmpd, "word", "styles.xml")
     x = open(sp, encoding="utf-8").read()
-    x = re.sub(r'w:ascii="[^"]*" w:hAnsi="[^"]*"',
-               'w:ascii="Times New Roman" w:hAnsi="Times New Roman"', x)
-    x = x.replace('<w:sz w:val="22"/>', '<w:sz w:val="24"/>')
-    x = x.replace('<w:szCs w:val="22"/>', '<w:szCs w:val="24"/>')
+    TNR = ('<w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" '
+           'w:cs="Times New Roman" w:eastAsia="Times New Roman"/>')
+    x = re.sub(r'<w:rFonts[^/]*?Theme[^/]*?/>', TNR, x)          # theme fonts -> explicit TNR
+    x = re.sub(r'<w:rFonts w:ascii="[^"]*"[^/]*?/>', TNR, x)      # any explicit font -> TNR
+    x = re.sub(r'<w:sz w:val="2[0-3]"\s*/>', '<w:sz w:val="24" />', x)
+    x = re.sub(r'<w:szCs w:val="2[0-3]"\s*/>', '<w:szCs w:val="24" />', x)
     open(sp, "w", encoding="utf-8").write(x)
     ref2 = os.path.join(work, "ref-tnr.docx")
     with zipfile.ZipFile(ref2, "w", zipfile.ZIP_DEFLATED) as z:
