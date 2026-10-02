@@ -11,12 +11,12 @@ Note: Cambodia and Laos are missing data for many early years, so the interface 
 
 ## Team
 
-| Member | Role |
-|---|---|
-| Lê Quân | Data: processing, normalizing, exporting JSON |
-| Trúc Phương | UI/UX: interface design, chart selection, colors |
-| Xuân Quế | Frontend: HTML/CSS skeleton and main charts |
-| Hoàng Quân | Frontend: JavaScript interactions and layer transitions |
+| Member | Student ID | Role |
+|---|---|---|
+| Trần Nguyễn Lê Quân (leader) | ITDSIU25033 | Data: processing, normalizing, exporting JSON |
+| Huỳnh Ngọc Trúc Phương | ITDSIU25031 | UI/UX: interface design, chart selection, colors |
+| Lê Xuân Quế | ITDSIU25036 | Frontend: HTML/CSS skeleton and main charts |
+| Đặng Hoàng Quân | ITDSIU25035 | Frontend: JavaScript interactions and layer transitions |
 
 The whole team writes the final report together.
 
