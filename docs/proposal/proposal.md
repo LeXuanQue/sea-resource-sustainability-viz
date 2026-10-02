@@ -121,3 +121,58 @@ Nothing is missing from the required checklist: all three levels are present wit
 | Effort to build in 10 weeks with no prior frontend experience | Medium | Medium to high | High — three full pages |
 
 **We will implement Design A.** It is the only one of the three whose main finding is readable with no interaction, and it still contains the full explore section, so it answers every research question while staying the lowest-risk build for a team with no prior frontend experience.
+
+## 6. Must-have and optional features
+
+Must-have features are what the working prototype (week 6) needs to answer the research questions; optional features are added only if time allows after week 7.
+
+**Must-have**
+
+- **M1 — Region level:** ranked bar list of the 8 countries for one indicator and year, with the regional median marked.
+- **M2 — Country level:** all 12 indicators for one country, each showing its position among the 8 and its verdict against the median.
+- **M3 — Indicator level:** trend line from 1990, the selected country highlighted, the regional median as a dashed line.
+- **M4 — Shared controls:** indicator selector, country selector and year slider, with every panel updating together.
+- **M5 — Drill-down:** clicking a country in the ranking opens its country view; a back control returns to Vietnam.
+- **M6 — Tooltips:** hover tooltips naming the country, year, value and unit on every mark.
+- **M7 — Missing data:** shown explicitly ("no data", breaks in lines, hatched cells), never drawn as zero.
+- **M8 — Provenance:** units on every chart and the World Bank Sovereign ESG source on the page.
+- **M9 — Delivery:** static site on GitHub Pages, no backend.
+
+Each research question is answered by at least one must-have feature: **RQ1** by M3 and M2, **RQ2** by M1, M4 and M5, and **RQ3** by M3 and M2.
+
+**Optional**
+
+- Opening story section with the three headline findings.
+- Orientation map of Southeast Asia beside the ranking.
+- Collapsible details section: full indicator table and data coverage per country.
+- Animated transitions when the year or indicator changes.
+- Shareable links that keep the current selection in the URL.
+- Vietnamese and English versions of the interface.
+
+## 7. Project schedule
+
+Ten weeks from Monday 5 October 2026, with the working prototype due in week 6 and the final submission in week 10. The full week-by-week plan is in the repository at `docs/project-schedule.md`.
+
+| Week | Dates | Milestone | Lead |
+| --- | --- | --- | --- |
+| 1 | Oct 5–11 | Kickoff: repo, proposal, sketches | All |
+| 2 | Oct 12–18 | Choose the design; JSON schema; page skeleton | All |
+| 3 | Oct 19–25 | JSON v1; region-level chart; shared controls | Trần Nguyễn Lê Quân, Lê Xuân Quế, Đặng Hoàng Quân |
+| 4 | Oct 26–Nov 1 | Country and indicator levels; drill-down and tooltips | Lê Xuân Quế, Đặng Hoàng Quân |
+| 5 | Nov 2–8 | Midterm week: integration and bug fixes | All |
+| 6 | Nov 9–15 | **Working prototype due**, deployed on GitHub Pages | All |
+| 7 | Nov 16–22 | Feedback and improvements | All |
+| 8 | Nov 23–29 | Optional features; report sections | All |
+| 9 | Nov 30–Dec 6 | Feature freeze, testing, report draft | All |
+| 10 | Dec 7–13 | **Final submission** | All |
+
+Weeks 1–2 include time for the team to learn D3.js, since no member has built a frontend before.
+
+## 8. Sources
+
+- World Bank — Sovereign ESG Data Framework: <https://esgdata.worldbank.org/data/framework>
+- World Bank — About the Sovereign ESG Data Portal
+- Chính phủ Việt Nam — Chiến lược quốc gia về biến đổi khí hậu đến năm 2050 (National Climate Change Strategy to 2050)
+- Ember — ASEAN electricity data and regional transition
+- Ember — From emission-intensive to investment hotspots: championing renewables in 3 ASEAN economies: <https://ember-energy.org/latest-insights/from-emission-intensive-to-investment-hotspots-championing-renewables-in-3-asean-economies/country-snapshots-and-opportunities/>
+- Segel, E. and Heer, J. (2010). Narrative Visualization: Telling Stories with Data. *IEEE Transactions on Visualization and Computer Graphics*, 16(6).
