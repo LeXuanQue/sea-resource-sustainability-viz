@@ -68,3 +68,56 @@ A short Python script turns the wide CSV into three static JSON files that the w
 9. **Export.** Three JSON files: `values.json` (long form), `snapshot.json` (latest value, median and rank per indicator) and `coverage.json` (first year, last year and gaps per country).
 
 **Known limitations.** Tree cover loss is in hectares, so larger countries look worse by construction; a land-area denominator (World Bank WDI, AG.LND.TOTL.K2) would fix this but is outside the ESG dataset. Protected areas starts only in 2013, so it has no 2010 baseline. Values are national averages and say nothing about regions inside each country.
+
+## 5. Visualization design: three alternative prototypes
+
+All three designs answer the same question with the same three levels — region, one country, one indicator over time. They differ in how the reader moves between those levels. Each is drawn in the project Figma file and exported to `docs/sketch/sketch-1.png` … `sketch-6.png`, two pages per design.
+
+### Design A: story first, then explore (Trần Nguyễn Lê Quân)
+
+The page opens as a short explanation and only then hands control to the reader, following the "martini glass" structure of narrative visualization (Segel and Heer, 2010).
+
+- **Hero.** The question as the title, a one-sentence answer, and three headline numbers with a plain "better / worse than region" tag: forest area +18.4 points since 1990, renewable energy share −51.7 points since 1990, and 2.9% of territory protected.
+- **Three story blocks.** Each has a conclusion as its title, one simple chart and two sentences: Vietnam is the only country whose forests grew back substantially; it gave up its renewable energy share faster than any neighbour; and it protects less of its territory than any of them.
+- **Explore section.** One shared indicator selector, country selector and year slider drive three linked panels: a ranked bar list with an orientation map (region level), a dot plot of all 12 indicators for the selected country (country level), and a trend line against the regional median (indicator level). Clicking a country in the list or map drills down to that country; a "Back to Vietnam" button returns.
+- **Details.** A collapsed section with the full 12-indicator table, data coverage per country and the method notes.
+
+Only Vietnam is coloured; the other seven countries are grey and named on hover. Better and worse are shown with symbol, word and colour together (▲ better in teal, ▼ worse in orange), so the page reads correctly for colour-blind viewers.
+
+**Strengths:** a reader who never touches a control still gets the main message; every chart uses position or length, the encodings people read most accurately. **Weaknesses:** the page is long, and the story blocks must be rewritten if the data changes.
+
+### Design B: coordinated dashboard (Trần Nguyễn Lê Quân)
+
+Everything sits on one screen with no scrolling story. A top bar holds the three shared controls — indicator, country and year — and every panel below answers to them at once.
+
+- **KPI strip.** Six cells under the tabs "Natural resources | Energy", each giving the value, its unit, the year it comes from, and a ▲ better / ▼ worse verdict against the regional median.
+- **Ranked bar list.** All 8 countries for the chosen indicator and year, best at top, with the regional median drawn as a dashed line across the bars.
+- **Small multiples.** Six mini line charts, one per indicator in the active tab, each carrying its own verdict.
+- **One large trend chart.** The selected country against the regional median, 1990–2022.
+
+Clicking a country in the ranking re-selects it and the KPI strip, the small multiples and the trend chart all switch together; a removable chip shows the current selection. Vietnam keeps its own colour in every view, so it stays findable even while another country is selected.
+
+**Strengths:** every level is visible at the same time, so comparing one indicator against another costs no navigation, and no state is hidden. **Weaknesses:** the main message is not readable without interacting, and six panels at once is dense for a first-time reader.
+
+### Design C: head-to-head comparison (Đặng Hoàng Quân)
+
+**Layout.** Three full-page levels inside one "Sustainability Atlas" shell with a fixed 01 / 02 / 03 header. Level 1, Regional Overview, pairs a Southeast Asia choropleth with a ranked bar list of the 8 countries and cards for the regional average and median. Level 2, Country Dashboard, shows all 12 indicators as sparkline cards for one country against a chosen comparison country. Level 3, Indicator Trend, is a single multi-line time-series chart with country chips, a draggable year cursor and a per-country coverage table.
+
+**Interaction.** The reader moves down the levels along a visible path: clicking a country on the map or in the ranking opens Level 2, clicking any indicator card opens Level 3, and a numbered breadcrumb (01 → 02 → 03, with "You are here") plus a back button on every level returns upward. Indicator, country, comparison-country and year controls sit at the top of each level, and "continue the analysis" cards at the foot of Level 1 name the next step explicitly.
+
+**Strength.** The path between the three levels is the most explicit of the three designs — numbered steps, breadcrumbs, back buttons and inline interaction hints mean the reader never loses their place — and missing data is handled rigorously throughout: grey hatching on the map, labelled "no data" bands on the trend chart, named gaps for Cambodia before 2005 and Laos before 2002, and "gaps are unavailable observations, never zero" stated on every level.
+
+**Weakness.** It benchmarks Viet Nam against the regional *average* by default, through a "Gap vs regional average" card and an "Average + median" benchmark selector, which conflicts with our rule that the regional reference is the median; Level 2 compares Viet Nam against a single partner country rather than against the region; and three full-length pages is the largest build of the three.
+
+Nothing is missing from the required checklist: all three levels are present with a visible path between them, indicator, country and year controls appear on every level, missing data is shown explicitly rather than as zero, and units and the World Bank Sovereign ESG source are printed on each page.
+
+### Chosen direction
+
+| Criterion | Design A | Design B | Design C |
+| --- | --- | --- | --- |
+| Main message readable without interaction | Yes | No — needs a selection first | Partly — Level 1 states one finding |
+| All three levels and the path between them | Yes, drill-down and back | Yes, all three on one screen | Yes, the most explicit path |
+| Shows missing data explicitly | Yes | Yes | Yes |
+| Effort to build in 10 weeks with no prior frontend experience | Medium | Medium to high | High — three full pages |
+
+**We will implement Design A.** It is the only one of the three whose main finding is readable with no interaction, and it still contains the full explore section, so it answers every research question while staying the lowest-risk build for a team with no prior frontend experience.
