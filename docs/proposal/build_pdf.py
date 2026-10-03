@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# The submitted PDF was typeset in Google Docs; this script builds an earlier draft layout.
 """Build docs/proposal/proposal.pdf (and .docx) from proposal.md + docs/sketch/*.png.
 
 Text pages: A4, 2.54 cm margins, Liberation Serif (Times New Roman metrics), 12pt/1.15.
