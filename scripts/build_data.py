@@ -373,18 +373,64 @@ def pick_latest_year(years_block, years):
 
 # ---------------------------------------------------------------- ghi file
 
-def write_json(path, payload):
-    """Ghi JSON. allow_nan=False de NaN/Infinity khong bao gio lot vao file.
+# allow_nan=False trong MOI lenh ghi duoi day: JSON chuan khong co NaN, nhung
+# json.dump mac dinh van ghi ra chu NaN khong hop le va JSON.parse cua trinh
+# duyet se bao loi. allow_nan=False bien loi am tham do thanh exception ngay
+# luc build.
+JSON_INDENT = 1
 
-    JSON chuan khong co NaN; json.dump mac dinh ghi ra chu NaN khong hop le
-    va JSON.parse cua trinh duyet se bao loi. allow_nan=False bien loi am tham
-    do thanh mot exception ngay luc build.
+
+def write_json(path, payload):
+    """Ghi JSON thuong, moi khoa mot dong (indent=1).
+
+    Dung cho snapshot.json va coverage.json. indent=1 chu khong phai 2 hay 4:
+    hai file nay long nhau sau (chi so -> nam -> nuoc -> truong) nen indent lon
+    se day noi dung sang qua phai.
     """
     with open(path, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, allow_nan=False,
-                  separators=(",", ":"))
+                  indent=JSON_INDENT)
         f.write("\n")
-    print(f"  da ghi {path}  ({os.path.getsize(path):,} bytes)")
+    report_written(path)
+
+
+def write_values_json(path, payload):
+    """Ghi values.json: phan dau indent=1, nhung MOI O DU LIEU MOT DONG.
+
+    Vi sao viet tay thay vi dung json.dump: `rows` co 2.776 phan tu. Neu dung
+    indent thi moi phan tu chiem 7 dong (hon 19.000 dong, khong doc duoc); neu
+    nen het thanh mot dong thi git diff chi hien "1 dong doi" va khong ai review
+    duoc du lieu bang mat. Thoa hiep: moi o `{c,i,y,v,rep}` dung mot dong.
+
+    Thu tu khoa va thu tu dong giu NGUYEN (json.dumps khong sap xep lai khi
+    sort_keys=False), nen doi dinh dang chi lam thay doi KHOANG TRANG.
+    """
+    rows = payload["rows"]
+    header = {key: value for key, value in payload.items() if key != "rows"}
+
+    # Dump phan dau (meta, countries, indicators) roi cat bo dau } cuoi cung,
+    # de noi tiep mang rows vao.
+    head_text = json.dumps(header, ensure_ascii=False, allow_nan=False,
+                           indent=JSON_INDENT)
+    head_text = head_text[:head_text.rindex("\n}")]
+
+    pad = " " * JSON_INDENT
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(head_text)
+        f.write(f',\n{pad}"rows": [\n')
+        f.write(",\n".join(
+            pad * 2 + json.dumps(row, ensure_ascii=False, allow_nan=False,
+                                 separators=(", ", ": "))
+            for row in rows
+        ))
+        f.write(f"\n{pad}]\n}}\n")
+    report_written(path)
+
+
+def report_written(path):
+    with open(path, encoding="utf-8") as f:
+        lines = sum(1 for _ in f)
+    print(f"  da ghi {path}  ({os.path.getsize(path):,} bytes, {lines:,} dong)")
 
 
 def main():
@@ -426,7 +472,7 @@ def main():
 
     values, snapshot, coverage = build(raw, selected, accessed)
     os.makedirs(args.out, exist_ok=True)
-    write_json(os.path.join(args.out, "values.json"), values)
+    write_values_json(os.path.join(args.out, "values.json"), values)
     write_json(os.path.join(args.out, "snapshot.json"), snapshot)
     write_json(os.path.join(args.out, "coverage.json"), coverage)
 

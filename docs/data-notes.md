@@ -139,7 +139,10 @@ con doc lap va mot loi logic chung se lot qua ca hai.
 6. **`coverage.json`**: nam dau, nam cuoi, so nam co so cua tung nuoc.
 7. **`snapshot.json`**: tinh cho **moi nam** (khong chi nam mac dinh), vi bieu do
    duong can duong median tung nam: `median`, `n`, `rank`, `verdict`, `gap`.
-8. Ghi JSON voi `allow_nan=False`.
+8. Ghi JSON voi `allow_nan=False`. **`values.json` moi o mot dong de diff
+   review duoc bang mat** (phan dau `indent=1`, mang `rows` moi phan tu mot
+   dong); `snapshot.json` va `coverage.json` dung `indent=1`. Chi tiet va ly do
+   o muc 4d.
 
 ## 4. Cac quy tac va vi sao
 
@@ -327,6 +330,54 @@ Chon `1.0` de **cung mode va cung tol voi `resource_depletion`** (cung don vi
 > **Noi thang: khong nguong nao sua duoc chi so nay.** Van de o du lieu, khong
 > o nguong. Nhom da chot **giu chi so va giu verdict**, kem mot dong chu thich
 > rieng tren giao dien. Chi tiet o muc 6.1.
+
+---
+
+## 4d. Dinh dang file JSON (nhom chot 2026-10-08)
+
+**`values.json` moi o mot dong de diff review duoc bang mat.**
+
+| file | dinh dang |
+|---|---|
+| `values.json` | phan dau (`meta`, `countries`, `indicators`) `indent=1`; mang `rows` mo va dong tren dong rieng, **moi o `{c,i,y,v,rep}` mot dong** |
+| `snapshot.json` | `indent=1` |
+| `coverage.json` | `indent=1` |
+
+Ba lua chon da can nhac:
+
+| cach ghi | kich thuoc `values.json` | so dong | review diff duoc? |
+|---|---|---|---|
+| nen het (`separators=(",", ":")`) | 181 KB | **1** | khong -- git chi hien "1 dong doi" |
+| `indent=1` cho ca `rows` | 266 KB | **19.687** | ve ly thuyet duoc, thuc te qua dai |
+| **moi o mot dong** (dang chon) | **215 KB** | **3.031** | **duoc** |
+
+(Ba so tren la do THAT, khong phai uoc luong.)
+
+Ca ba cach cho **cung mot noi dung**; chi khac khoang trang. Doi tu cach 1 sang
+cach 3 lam file to them 34 KB (181 -> 215 KB), tong `data/*.json` **460 KB** --
+khong dang ke voi mot trang tinh.
+
+Thu tu khoa va thu tu dong **co dinh**: `meta`, `countries`, `indicators`,
+`rows` o cap ngoai; `c`, `i`, `y`, `v`, `rep` trong moi o. `json.dumps` khong
+sap xep lai khi `sort_keys=False` (mac dinh), nen chay lai script voi cung du
+lieu cho ra file **giong het tung byte** -- `git diff` rong. Dieu nay quan trong:
+neu moi lan chay lai ma file doi thu tu thi khong ai phan biet duoc
+"du lieu doi" voi "chi dinh dang doi".
+
+Moi file ket thuc bang mot newline.
+
+Cach chung minh doi dinh dang khong lam doi noi dung (da chay 2026-10-08):
+
+```fish
+python3 -c "
+import json, subprocess
+for f in ('data/values.json','data/snapshot.json','data/coverage.json'):
+    old=json.loads(subprocess.run(['git','show','HEAD:'+f],capture_output=True,text=True).stdout)
+    new=json.load(open(f,encoding='utf-8'))
+    print(f, old==new)
+"
+```
+Ket qua: `True` cho ca ba file, va thu tu khoa + thu tu 2.776 dong cung giu nguyen.
 
 ---
 

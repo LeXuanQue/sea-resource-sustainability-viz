@@ -64,6 +64,24 @@ con so o day thi phai doi **ca hai** file do.
 
 ---
 
+## Dinh dang file
+
+**`values.json` moi o mot dong de diff review duoc bang mat.** Phan dau
+(`meta`, `countries`, `indicators`) dung `indent=1`; mang `rows` thi mo va dong
+tren dong rieng, va **moi phan tu `{c,i,y,v,rep}` chiem dung mot dong**.
+`snapshot.json` va `coverage.json` dung `indent=1`.
+
+Vi sao khong nen het thanh mot dong: `git diff` se chi hien "1 dong doi" va
+khong ai review duoc du lieu. Vi sao `rows` khong dung `indent`: 2.776 phan tu
+x 7 dong = hon 19.000 dong, cung khong doc duoc.
+
+Thu tu khoa va thu tu dong **co dinh** (`meta`, `countries`, `indicators`,
+`rows`; trong moi o la `c`, `i`, `y`, `v`, `rep`), nen mot lan sinh lai voi
+cung du lieu cho ra file **giong het tung byte**. Moi file ket thuc bang mot
+newline.
+
+---
+
 ## Schema v0
 
 Chi Le Quan duoc sua schema den khi du lieu mau forest_area co tren repo.
