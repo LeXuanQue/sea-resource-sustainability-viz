@@ -1,0 +1,12 @@
+# File CSV goc tu World Bank: 185 MB, VUOT gioi han 100 MB/file cua GitHub.
+# Khong bao gio commit. Script nhan duong dan qua --csv, mac dinh ../WB_ESG.csv
+# (tuc CSV nam NGOAI repo, canh folder repo).
+WB_ESG.csv
+*.csv
+
+# File lock cua LibreOffice khi mo CSV
+.~lock*
+
+__pycache__/
+*.pyc
+.DS_Store

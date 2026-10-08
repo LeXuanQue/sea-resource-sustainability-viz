@@ -1,0 +1,506 @@
+{
+ "forest_area": {
+  "VNM": {
+   "first": 1990,
+   "last": 2022,
+   "count": 33
+  },
+  "IDN": {
+   "first": 1990,
+   "last": 2022,
+   "count": 33
+  },
+  "THA": {
+   "first": 1990,
+   "last": 2022,
+   "count": 33
+  },
+  "MYS": {
+   "first": 1990,
+   "last": 2022,
+   "count": 33
+  },
+  "PHL": {
+   "first": 1990,
+   "last": 2022,
+   "count": 33
+  },
+  "KHM": {
+   "first": 1990,
+   "last": 2022,
+   "count": 33
+  },
+  "LAO": {
+   "first": 1990,
+   "last": 2022,
+   "count": 33
+  },
+  "MMR": {
+   "first": 1990,
+   "last": 2022,
+   "count": 33
+  }
+ },
+ "tree_cover_loss": {
+  "VNM": {
+   "first": 2002,
+   "last": 2021,
+   "count": 20
+  },
+  "IDN": {
+   "first": 2002,
+   "last": 2021,
+   "count": 20
+  },
+  "THA": {
+   "first": 2002,
+   "last": 2021,
+   "count": 20
+  },
+  "MYS": {
+   "first": 2002,
+   "last": 2021,
+   "count": 20
+  },
+  "PHL": {
+   "first": 2002,
+   "last": 2021,
+   "count": 20
+  },
+  "KHM": {
+   "first": 2002,
+   "last": 2021,
+   "count": 20
+  },
+  "LAO": {
+   "first": 2002,
+   "last": 2021,
+   "count": 20
+  },
+  "MMR": {
+   "first": 2002,
+   "last": 2021,
+   "count": 20
+  }
+ },
+ "protected_areas": {
+  "VNM": {
+   "first": 2013,
+   "last": 2023,
+   "count": 11
+  },
+  "IDN": {
+   "first": 2013,
+   "last": 2023,
+   "count": 11
+  },
+  "THA": {
+   "first": 2013,
+   "last": 2023,
+   "count": 11
+  },
+  "MYS": {
+   "first": 2013,
+   "last": 2023,
+   "count": 11
+  },
+  "PHL": {
+   "first": 2013,
+   "last": 2023,
+   "count": 11
+  },
+  "KHM": {
+   "first": 2013,
+   "last": 2023,
+   "count": 11
+  },
+  "LAO": {
+   "first": 2013,
+   "last": 2023,
+   "count": 11
+  },
+  "MMR": {
+   "first": 2013,
+   "last": 2023,
+   "count": 11
+  }
+ },
+ "resource_depletion": {
+  "VNM": {
+   "first": 1990,
+   "last": 2021,
+   "count": 32
+  },
+  "IDN": {
+   "first": 1990,
+   "last": 2021,
+   "count": 32
+  },
+  "THA": {
+   "first": 1990,
+   "last": 2021,
+   "count": 32
+  },
+  "MYS": {
+   "first": 1990,
+   "last": 2021,
+   "count": 32
+  },
+  "PHL": {
+   "first": 1990,
+   "last": 2021,
+   "count": 32
+  },
+  "KHM": {
+   "first": 1995,
+   "last": 2021,
+   "count": 27
+  },
+  "LAO": {
+   "first": 1990,
+   "last": 2021,
+   "count": 32
+  },
+  "MMR": {
+   "first": 1990,
+   "last": 2021,
+   "count": 32
+  }
+ },
+ "net_forest_depletion": {
+  "VNM": {
+   "first": 1990,
+   "last": 2021,
+   "count": 32
+  },
+  "IDN": {
+   "first": 1990,
+   "last": 2021,
+   "count": 32
+  },
+  "THA": {
+   "first": 1990,
+   "last": 2021,
+   "count": 32
+  },
+  "MYS": {
+   "first": 1990,
+   "last": 2021,
+   "count": 32
+  },
+  "PHL": {
+   "first": 1990,
+   "last": 2021,
+   "count": 32
+  },
+  "KHM": {
+   "first": 1995,
+   "last": 2021,
+   "count": 27
+  },
+  "LAO": {
+   "first": 1990,
+   "last": 2021,
+   "count": 32
+  },
+  "MMR": {
+   "first": 1990,
+   "last": 2021,
+   "count": 32
+  }
+ },
+ "freshwater_withdrawals": {
+  "VNM": {
+   "first": 1990,
+   "last": 2021,
+   "count": 32
+  },
+  "IDN": {
+   "first": 1990,
+   "last": 2021,
+   "count": 32
+  },
+  "THA": {
+   "first": 2007,
+   "last": 2021,
+   "count": 15
+  },
+  "MYS": {
+   "first": 1990,
+   "last": 2021,
+   "count": 32
+  },
+  "PHL": {
+   "first": 2006,
+   "last": 2021,
+   "count": 16
+  },
+  "KHM": {
+   "first": 2006,
+   "last": 2021,
+   "count": 16
+  },
+  "LAO": {
+   "first": 2005,
+   "last": 2021,
+   "count": 17
+  },
+  "MMR": {
+   "first": 1990,
+   "last": 2021,
+   "count": 32
+  }
+ },
+ "energy_intensity": {
+  "VNM": {
+   "first": 2000,
+   "last": 2021,
+   "count": 22
+  },
+  "IDN": {
+   "first": 2000,
+   "last": 2021,
+   "count": 22
+  },
+  "THA": {
+   "first": 2000,
+   "last": 2021,
+   "count": 22
+  },
+  "MYS": {
+   "first": 2000,
+   "last": 2021,
+   "count": 22
+  },
+  "PHL": {
+   "first": 2000,
+   "last": 2021,
+   "count": 22
+  },
+  "KHM": {
+   "first": 2000,
+   "last": 2021,
+   "count": 22
+  },
+  "LAO": {
+   "first": 2000,
+   "last": 2022,
+   "count": 23
+  },
+  "MMR": {
+   "first": 2000,
+   "last": 2021,
+   "count": 22
+  }
+ },
+ "renewable_energy": {
+  "VNM": {
+   "first": 1990,
+   "last": 2021,
+   "count": 32
+  },
+  "IDN": {
+   "first": 1990,
+   "last": 2021,
+   "count": 32
+  },
+  "THA": {
+   "first": 1990,
+   "last": 2021,
+   "count": 32
+  },
+  "MYS": {
+   "first": 1990,
+   "last": 2021,
+   "count": 32
+  },
+  "PHL": {
+   "first": 1990,
+   "last": 2021,
+   "count": 32
+  },
+  "KHM": {
+   "first": 1995,
+   "last": 2021,
+   "count": 27
+  },
+  "LAO": {
+   "first": 1990,
+   "last": 2022,
+   "count": 33
+  },
+  "MMR": {
+   "first": 1990,
+   "last": 2021,
+   "count": 32
+  }
+ },
+ "renewable_electricity": {
+  "VNM": {
+   "first": 1990,
+   "last": 2021,
+   "count": 32
+  },
+  "IDN": {
+   "first": 1990,
+   "last": 2021,
+   "count": 32
+  },
+  "THA": {
+   "first": 1990,
+   "last": 2021,
+   "count": 32
+  },
+  "MYS": {
+   "first": 1990,
+   "last": 2021,
+   "count": 32
+  },
+  "PHL": {
+   "first": 1990,
+   "last": 2021,
+   "count": 32
+  },
+  "KHM": {
+   "first": 1995,
+   "last": 2021,
+   "count": 27
+  },
+  "LAO": {
+   "first": 2001,
+   "last": 2021,
+   "count": 10
+  },
+  "MMR": {
+   "first": 1990,
+   "last": 2021,
+   "count": 32
+  }
+ },
+ "energy_use_per_person": {
+  "VNM": {
+   "first": 1990,
+   "last": 2022,
+   "count": 33
+  },
+  "IDN": {
+   "first": 1990,
+   "last": 2022,
+   "count": 33
+  },
+  "THA": {
+   "first": 1990,
+   "last": 2022,
+   "count": 33
+  },
+  "MYS": {
+   "first": 1990,
+   "last": 2022,
+   "count": 33
+  },
+  "PHL": {
+   "first": 1990,
+   "last": 2022,
+   "count": 33
+  },
+  "KHM": {
+   "first": 1995,
+   "last": 2022,
+   "count": 28
+  },
+  "LAO": {
+   "first": 2000,
+   "last": 2022,
+   "count": 23
+  },
+  "MMR": {
+   "first": 1990,
+   "last": 2022,
+   "count": 33
+  }
+ },
+ "fossil_fuel": {
+  "VNM": {
+   "first": 1990,
+   "last": 2022,
+   "count": 33
+  },
+  "IDN": {
+   "first": 1990,
+   "last": 2022,
+   "count": 33
+  },
+  "THA": {
+   "first": 1990,
+   "last": 2022,
+   "count": 33
+  },
+  "MYS": {
+   "first": 1990,
+   "last": 2022,
+   "count": 33
+  },
+  "PHL": {
+   "first": 1990,
+   "last": 2022,
+   "count": 33
+  },
+  "KHM": {
+   "first": 1995,
+   "last": 2022,
+   "count": 28
+  },
+  "LAO": {
+   "first": 2000,
+   "last": 2022,
+   "count": 23
+  },
+  "MMR": {
+   "first": 1990,
+   "last": 2022,
+   "count": 33
+  }
+ },
+ "coal_electricity": {
+  "VNM": {
+   "first": 1990,
+   "last": 2022,
+   "count": 33
+  },
+  "IDN": {
+   "first": 1990,
+   "last": 2022,
+   "count": 33
+  },
+  "THA": {
+   "first": 1990,
+   "last": 2022,
+   "count": 33
+  },
+  "MYS": {
+   "first": 1990,
+   "last": 2022,
+   "count": 33
+  },
+  "PHL": {
+   "first": 1990,
+   "last": 2022,
+   "count": 33
+  },
+  "KHM": {
+   "first": 1995,
+   "last": 2022,
+   "count": 28
+  },
+  "LAO": {
+   "first": 2000,
+   "last": 2022,
+   "count": 23
+  },
+  "MMR": {
+   "first": 1990,
+   "last": 2022,
+   "count": 33
+  }
+ }
+}
