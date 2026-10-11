@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Resource and Energy Sustainability: Vietnam vs. Southeast Asia</title>
+  <meta name="description" content="Compare Vietnam with 7 Southeast Asian countries on 12 resource and energy indicators from World Bank ESG data.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <p class="eyebrow">Vietnam and 7 Southeast Asian countries · 12 indicators</p>
+    <h1 id="page-title">Resource and Energy Sustainability: Vietnam vs. Southeast Asia</h1>
+    <p id="page-question" class="question">Where does Vietnam stand compared with the region, and is the trend going up or down?</p>
+  </header>
+
+  <main>
+    <!-- Control area. Hoàng Quân fills the options and wires these to the shared state. -->
+    <section id="controls" class="controls" aria-label="Controls">
+      <div class="control control-indicator">
+        <label for="indicator-select">Indicator</label>
+        <select id="indicator-select" name="indicator">
+          <optgroup id="indicator-group-resource" label="Natural resources"></optgroup>
+          <optgroup id="indicator-group-energy" label="Energy"></optgroup>
+        </select>
+        <p id="indicator-unit" class="control-hint" aria-live="polite"></p>
+      </div>
+
+      <div class="control control-year">
+        <label for="year-slider">Year <output id="year-value" for="year-slider"></output></label>
+        <input id="year-slider" name="year" type="range" step="1">
+        <div class="range-ends" aria-hidden="true">
+          <span id="year-min"></span>
+          <span id="year-max"></span>
+        </div>
+      </div>
+
+      <fieldset class="control control-countries">
+        <legend>Countries</legend>
+        <div id="country-chips" class="chips"></div>
+      </fieldset>
+    </section>
+
+    <ul id="legend" class="legend" aria-label="Color legend">
+      <li><span class="swatch swatch-vn"></span>Viet Nam</li>
+      <li><span class="swatch swatch-selected"></span>Selected country</li>
+      <li><span class="swatch swatch-other"></span>Other countries</li>
+      <li><span class="swatch swatch-median"></span>Regional median</li>
+      <li><span class="swatch swatch-nodata"></span>No data</li>
+    </ul>
+
+    <div class="charts">
+      <section class="panel" aria-labelledby="chart-region-title">
+        <header class="panel-header">
+          <h2 id="chart-region-title">The region in one year</h2>
+          <p id="chart-region-subtitle" class="panel-subtitle"></p>
+        </header>
+        <div id="chart-region" class="chart" role="img" aria-labelledby="chart-region-title"></div>
+        <p id="chart-region-note" class="chart-note"></p>
+      </section>
+
+      <section class="panel" aria-labelledby="chart-trend-title">
+        <header class="panel-header">
+          <h2 id="chart-trend-title">Trend over time</h2>
+          <p id="chart-trend-subtitle" class="panel-subtitle"></p>
+        </header>
+        <div id="chart-trend" class="chart" role="img" aria-labelledby="chart-trend-title"></div>
+        <p id="chart-trend-note" class="chart-note"></p>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      Data source: <a href="https://databank.worldbank.org/source/environment-social-and-governance-(esg)-data" rel="noopener">World Bank Sovereign ESG Data</a><span id="data-accessed-wrap" hidden>, accessed <time id="data-accessed"></time></span>.
+      <!-- #data-accessed is filled from meta.accessed in data/values.json, never typed by hand. -->
+    </p>
+    <p>A missing year or country is shown as "no data", never as zero.</p>
+  </footer>
+
+  <!-- Script order matters: D3 first, then project scripts. -->
+  <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
