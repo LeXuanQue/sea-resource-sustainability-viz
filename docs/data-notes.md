@@ -1,372 +1,373 @@
-# Ghi chu du lieu (Quan)
+# Data notes
 
-File nay giai thich bang loi thuong script lam gi, quy tac nao duoc ap dung va
-vi sao, va cho nao de sai. Dung de doc lai va de tra loi khi giang vien hoi.
+This document explains in plain language what the data scripts do, which rules
+they apply and why, and where mistakes are easy to make. It records the team's
+data decisions so they can be reviewed and cited in the final report.
 
-Cap nhat lan cuoi: 2026-10-08 (Task 1 den Task 5, du 12 chi so).
+Last updated: 2026-10-08 (all 12 indicators).
 
 ---
 
-## 0. Cach chay
+## 0. How to run
 
-CSV goc nam NGOAI repo, ngay canh folder repo:
+The raw CSV sits OUTSIDE the repo, right next to the repo folder:
 
 ```
 Project/
-  WB_ESG.csv                          <- 185 MB, khong commit
+  WB_ESG.csv                          <- 185 MB, not committed
   sea-resource-sustainability-viz/    <- repo
 ```
 
-> **DONG LIBREOFFICE TRUOC KHI CHAY.** Neu dang mo `WB_ESG.csv` bang
-> LibreOffice Calc thi:
-> - Calc chi hien ~1 trieu dong dau nen **khong dung de doi chieu** duoc.
-> - Luu lai tu Calc se **ghi de file va doi dinh dang so**, lam sai toan bo
->   ket qua. File `.~lock.WB_ESG.csv#` la dau hieu dang mo.
+> **CLOSE LIBREOFFICE BEFORE RUNNING.** If `WB_ESG.csv` is open in
+> LibreOffice Calc:
+> - Calc only shows the first ~1 million rows, so it **cannot be used to cross-check**.
+> - Saving from Calc **overwrites the file and changes the number format**, which breaks
+>   every result. A `.~lock.WB_ESG.csv#` file means the CSV is open.
 
 ```fish
-cd ~/Documents/HCMIU/"2026-2027 HK1"/DS\&DV/Project/sea-resource-sustainability-viz
+# run from the repo root
+cd sea-resource-sustainability-viz
 
-# Task 1: xem cau truc CSV + bang khoang nam that (chi in, khong ghi file)
+# Task 1: CSV structure + actual year ranges (prints only, writes no files)
 python3 scripts/inspect_csv.py --csv ../WB_ESG.csv
 
-# Task 2: sinh JSON cho rieng forest_area
+# Task 2: generate JSON for forest_area only
 python3 scripts/build_data.py --csv ../WB_ESG.csv --indicators forest_area
 
-# Task 3+4: sinh JSON cho ca 12 chi so
+# Task 3+4: generate JSON for all 12 indicators
 python3 scripts/build_data.py --csv ../WB_ESG.csv
 
-# Task 5: kiem tra doc lap. Chay duoc cho ca ban 1 chi so lan ban du 12.
+# Task 5: independent check. Works for both the 1-indicator and the 12-indicator version.
 python3 scripts/verify_data.py --csv ../WB_ESG.csv
 ```
 
-Can `pandas` (da co san tren may: 2.3.3). `verify_data.py` **khong** can pandas.
+Requires `pandas` (built with 2.3.3). `verify_data.py` does **not** need pandas.
 
-## 0b. 4 quy tac nhom da chot (code va data/README.md phai khop tung chu)
+## 0b. 4 team rules (the code and data/README.md must match word for word)
 
-1. **Nam co `n < 3`:** nuoc **van co muc** trong `countries` nhung `rank`,
-   `verdict`, `gap` **deu `null`**. `median` va `n` **van duoc ghi**.
+1. **Years with `n < 3`:** the country **still has an entry** in `countries`, but `rank`,
+   `verdict` and `gap` are **all `null`**. `median` and `n` **are still written**.
 2. **`direction: "none"`** (`tree_cover_loss`, `energy_use_per_person`):
-   `rank` va `verdict` **luon `null`**, `gap` va `median` **van co**.
-3. **Frontend chi ve duong median khi `n >= 3`** -- xet theo **`n`**, khong xet
-   theo `rank` (vi `rank` con `null` o chi so `direction: "none"` du nam do
-   co du 8 nuoc).
-4. **`meta.accessed` duoc footer trang doc truc tiep tu JSON, khong go tay.**
+   `rank` and `verdict` are **always `null`**; `gap` and `median` **are still present**.
+3. **The frontend draws the median line only when `n >= 3`** -- decided by **`n`**, not
+   by `rank` (because `rank` is still `null` for `direction: "none"` indicators even when
+   all 8 countries report that year).
+4. **The page footer reads `meta.accessed` directly from the JSON; it is never typed by hand.**
 
-Khi quy tac 1 va 2 cung ap (chi so `direction none` o nam `n < 3`) thi
-**quy tac 1 thang**: `gap` cung `null`. Thuc te khong xay ra, vi
-`tree_cover_loss` va `energy_use_per_person` khong co nam nao `n < 3`.
+When rules 1 and 2 both apply (a `direction none` indicator in a year with `n < 3`),
+**rule 1 wins**: `gap` is also `null`. This does not happen in practice, because
+`tree_cover_loss` and `energy_use_per_person` have no year with `n < 3`.
 
 ---
 
-## 1. CSV goc khong giong nhu nhom tuong
+## 1. The raw CSV is not what the team expected
 
-Day la diem bat ngo lon nhat cua Task 1.
+This was the biggest surprise of Task 1.
 
-- CSV **khong phai** dang "rong" cua World Bank (moi nam mot cot). No la ban
-  **Data360**, dang **dai**: 37 cot, moi dong la mot quan sat
-  *nuoc x chi so x nam*. Nam nam trong **mot cot** `TIME_PERIOD`.
-- Cot `REF_AREA` **da la ma ISO3 san** (VNM, IDN, LAO...). Nen **khong can map
-  tu ten nuoc sang ma** nhu ke hoach ban dau. Viec map van ton tai nhung theo
-  chieu nguoc: CSV ghi `Lao PDR`, nhom hien thi `Laos`. Ten hien thi do nhom
-  quyet dinh, lay tu `scripts/indicators.py`, khong lay tu CSV.
-- Ma chi so trong CSV co **tien to `WB_ESG_`** va **dau cham doi thanh gach duoi**:
-  `AG.LND.FRST.ZS` -> `WB_ESG_AG_LND_FRST_ZS`. Ca 12 ma deu co trong file.
-- **Thieu du lieu = thieu han dong**, khong phai o trong. Trong pham vi
-  8 nuoc x 12 chi so co 2.955 dong, **0 o `OBS_VALUE` trong**, `OBS_STATUS`
-  toan `A` (Normal value), **0 dong trung** tổ hop nuoc/chi so/nam.
-  > **He qua cho Task 5:** khong the kiem "null khop o trong cua CSV".
-  > Phai kiem "null khop **dong khong ton tai** trong CSV".
-- **Khong duoc tach CSV bang dau phay thu cong.** Nhan chi so
-  `Annual freshwater withdrawals, total (% of internal resources)` co dau phay
-  ben trong dau ngoac kep, tach bang `,` se lech cot va doc sai nam.
-  Phai dung `csv` module hoac `pandas`. Minh da thu cach sai mot lan va
-  2 chi so bi doc ra nam = 0.
+- The CSV is **not** the World Bank "wide" format (one column per year). It is the
+  **Data360** export, in **long** form: 37 columns, each row one
+  *country x indicator x year* observation. Years are in **one column**, `TIME_PERIOD`.
+- The `REF_AREA` column **is already the ISO3 code** (VNM, IDN, LAO...). So there is **no need to map
+  country names to codes** as originally planned. Mapping still exists, but in the
+  other direction: the CSV says `Lao PDR`, the team shows `Laos`. Display names are
+  the team's choice, taken from `scripts/indicators.py`, not from the CSV.
+- Indicator codes in the CSV have a **`WB_ESG_` prefix** and **dots turned into underscores**:
+  `AG.LND.FRST.ZS` -> `WB_ESG_AG_LND_FRST_ZS`. All 12 codes are in the file.
+- **Missing data = a missing row**, not an empty cell. Within the scope of
+  8 countries x 12 indicators there are 2,955 rows, **0 empty `OBS_VALUE` cells**, `OBS_STATUS`
+  is all `A` (Normal value), and **0 duplicate** country/indicator/year combinations.
+  > **Consequence for Task 5:** "null matches an empty CSV cell" cannot be checked.
+  > The check must be "null matches a **row that does not exist** in the CSV".
+- **Never split the CSV on commas by hand.** The indicator label
+  `Annual freshwater withdrawals, total (% of internal resources)` has a comma
+  inside double quotes; splitting on `,` shifts the columns and reads the wrong year.
+  Use the `csv` module or `pandas`. The wrong approach was tried once and
+  2 indicators were read with year = 0.
 
-## 2. Khoang nam: proposal vs CSV that
+## 2. Year ranges: proposal vs actual CSV
 
-4 chi so co du lieu **som hon** proposal ghi:
+4 indicators have data **earlier** than the proposal states:
 
-| chi so | proposal | CSV that |
+| indicator | proposal | actual CSV |
 |---|---|---|
 | resource_depletion | 1990-2021 | **1970**-2021 |
 | net_forest_depletion | 1990-2021 | **1970**-2021 |
 | freshwater_withdrawals | 1990-2021 | **1980**-2021 |
 | energy_use_per_person | 1990-2022 | **1971**-2022 |
 
-8 chi so con lai khop chinh xac.
+The other 8 indicators match exactly.
 
-**Quyet dinh: cat theo proposal**, khong lay khoang rong hon. Ba ly do:
-1. Giu dung so dong ky vong: 347 nam x 8 nuoc = **2.776 dong**.
-2. Khop bang chi so trong `README.md` va trong proposal da nop, khong phai sua.
-3. Tranh doan dau chi co 1-2 nuoc co so. freshwater 1980-1986 **chi co Viet Nam**;
-   median luc do bang chinh gia tri Viet Nam nen gap = 0 va nhan so sanh
-   luon la "ngang median" -- mot cau sai ve y nghia.
+**Decision: cut to the proposal range**, not the wider range. Three reasons:
+1. Keep the expected row count: 347 years x 8 countries = **2,776 rows**.
+2. Match the indicator table in `README.md` and in the submitted proposal, with no edits needed.
+3. Avoid early stretches where only 1-2 countries report. Freshwater 1980-1986 has **only Viet Nam**;
+   the median then equals Viet Nam's own value, so gap = 0 and the comparison label
+   is always "level with the median" -- a misleading statement.
 
-Phan Coverage cua proposal da duoc kiem lai va **dung het**:
-- Cambodia bat dau 1995: dung voi energy_use_per_person, fossil_fuel,
+The proposal's Coverage section was re-checked and is **entirely correct**:
+- Cambodia starts in 1995: true for energy_use_per_person, fossil_fuel,
   coal_electricity, renewable_electricity, resource_depletion,
   net_forest_depletion, renewable_energy.
-- Laos bat dau 2000 voi energy use / fossil / coal: dung ca ba.
-- freshwater bat dau 2005-2007 voi **dung 4 nuoc**: LAO 2005, KHM 2006,
+- Laos starts in 2000 for energy use / fossil / coal: true for all three.
+- Freshwater starts in 2005-2007 for **exactly 4 countries**: LAO 2005, KHM 2006,
   PHL 2006, THA 2007.
-- Laos chi co **10 nam** roi rac o renewable_electricity (2001-2021): dung.
+- Laos has only **10 scattered years** for renewable_electricity (2001-2021): true.
 
-## 3. Script lam gi, tung buoc
+## 3. What the scripts do, step by step
 
-`scripts/indicators.py` -- bang cau hinh 12 chi so va 8 nuoc. **Mot nguon su
-that duy nhat.** Sua don vi / decimals / tol chi sua o day.
-Tach ra file rieng vi `verify_data.py` (Task 5) **khong duoc** import tu
-`build_data.py`; neu bang nay nam trong `build_data.py` thi hai script khong
-con doc lap va mot loi logic chung se lot qua ca hai.
+`scripts/indicators.py` -- configuration table for the 12 indicators and 8 countries. **The single
+source of truth.** Units / decimals / tol are changed here only.
+It is a separate file because `verify_data.py` (Task 5) **must not** import from
+`build_data.py`; if this table lived in `build_data.py`, the two scripts would no longer
+be independent and a shared logic error would slip through both.
 
-`scripts/inspect_csv.py` -- chi doc va in (Task 1). Khong ghi file nao.
+`scripts/inspect_csv.py` -- reads and prints only (Task 1). Writes no files.
 
-`scripts/build_data.py` -- sinh 3 file JSON. Cac buoc:
+`scripts/build_data.py` -- generates the 3 JSON files. Steps:
 
-1. **Doc CSV theo khoi 500.000 dong** (pandas `chunksize`), chi giu 4 cot va
-   loc 8 nuoc x cac chi so duoc chon. File 185 MB nhung chi mat ~1,6 giay va
-   khong an het RAM.
-2. **Giu gia tri duoi dang CHUOI goc**, chua doi sang so. Vi sao: lam tron sau
-   nay dung `Decimal` dung tren chuoi thap phan goc. Neu doi sang `float` truoc
-   thi `"2.675"` tro thanh `2.67499999...` trong he nhi phan va lam tron ra
-   `2.67` thay vi `2.68`.
-3. **Lam tron gia tri `v` mot lan** tu du lieu tho theo `decimals` cua tung chi
-   so, bang `Decimal` + `ROUND_HALF_UP`. (`median`, `gap`, `rank` thi tinh tu
-   cac `v` da lam tron nay -- xem muc "Quy uoc lam tron" ben duoi.)
-4. **Danh dau `rep`** tren gia tri **goc** (truoc lam tron).
-5. **`values.json`**: moi to hop nuoc x chi so x nam deu co mot dong; thieu thi
+1. **Read the CSV in chunks of 500,000 rows** (pandas `chunksize`), keep only 4 columns and
+   filter to 8 countries x the selected indicators. The file is 185 MB but this takes only ~1.6 seconds and
+   does not exhaust RAM.
+2. **Keep values as the ORIGINAL STRING**, not yet converted to numbers. Why: rounding later
+   uses `Decimal` on the original decimal string. Converting to `float` first
+   would turn `"2.675"` into `2.67499999...` in binary and round it to
+   `2.67` instead of `2.68`.
+3. **Round `v` once** from the raw data to each indicator's `decimals`,
+   with `Decimal` + `ROUND_HALF_UP`. (`median`, `gap`, `rank` are computed from
+   these rounded `v` values -- see "Rounding convention" below.)
+4. **Flag `rep`** on the **raw** values (before rounding).
+5. **`values.json`**: every country x indicator x year combination has a row; missing means
    `v: null`.
-6. **`coverage.json`**: nam dau, nam cuoi, so nam co so cua tung nuoc.
-7. **`snapshot.json`**: tinh cho **moi nam** (khong chi nam mac dinh), vi bieu do
-   duong can duong median tung nam: `median`, `n`, `rank`, `verdict`, `gap`.
-8. Ghi JSON voi `allow_nan=False`. **`values.json` moi o mot dong de diff
-   review duoc bang mat** (phan dau `indent=1`, mang `rows` moi phan tu mot
-   dong); `snapshot.json` va `coverage.json` dung `indent=1`. Chi tiet va ly do
-   o muc 4d.
+6. **`coverage.json`**: first year, last year and number of years with a value, per country.
+7. **`snapshot.json`**: computed for **every year** (not only the default year), because the line
+   chart needs the median line for each year: `median`, `n`, `rank`, `verdict`, `gap`.
+8. Write JSON with `allow_nan=False`. **`values.json` has one cell per line so diffs can be
+   reviewed by eye** (header with `indent=1`, one `rows` item per
+   line); `snapshot.json` and `coverage.json` use `indent=1`. Details and reasons
+   in section 4d.
 
-## 4. Cac quy tac va vi sao
+## 4. The rules and why
 
-### Quy uoc lam tron (nhom chot 2026-10-08)
+### Rounding convention (team decision 2026-10-08)
 
-> Gia tri `v` lam tron **mot lan** tu du lieu tho (half-up). `median`, `gap` va
-> `rank` tinh tu cac **`v` da lam tron**; `median` duoc lam tron half-up
-> **lan nua** theo `decimals` cua chi so.
-> **He qua: `median` co the lech toi da 1 don vi cuoi so voi median cua gia tri
-> tho.**
+> `v` is rounded **once** from the raw data (half-up). `median`, `gap` and
+> `rank` are computed from the **rounded `v`**; `median` is rounded half-up
+> **again** to the indicator's `decimals`.
+> **Consequence: `median` can differ by at most 1 unit in the last digit from the median of the
+> raw values.**
 
-Tuc la co **hai** buoc lam tron tren duong di tu CSV den `median`. Day la chu y,
-khong phai thieu sot. **Ly do giu quy uoc nay:** nguoi xem **tu tinh lai duoc**
-median tu cac so hien tren bieu do. Neu tinh median tu gia tri tho thi so hien
-tren duong median se khong khop voi trung binh cua cac so hien tren cot, va
-khong ai kiem lai duoc.
+So there are **two** rounding steps on the way from the CSV to `median`. This is deliberate,
+not an oversight. **Reason for this convention:** viewers **can recompute**
+the median from the numbers shown on the chart. If the median were computed from raw values, the number shown
+on the median line would not match the average of the numbers shown on the bars, and
+nobody could check it.
 
-**Vi du cu the -- `coal_electricity` 2022** (`decimals = 1`), hai so giua la
-Cambodia va Viet Nam:
+**Concrete example -- `coal_electricity` 2022** (`decimals = 1`); the two middle values are
+Cambodia and Viet Nam:
 
-| | tinh the nao | ket qua |
+| | how it is computed | result |
 |---|---|---|
-| median cua gia tri **tho** | `(32.2871640669047 + 40.1977454271822) / 2 = 36.24245...` -> lam tron | **36.2** |
-| median theo **quy uoc cua nhom** | `v` tho lam tron truoc -> `(32.3 + 40.2) / 2 = 36.25` -> lam tron half-up | **36.3** |
+| median of the **raw** values | `(32.2871640669047 + 40.1977454271822) / 2 = 36.24245...` -> rounded | **36.2** |
+| median under the **team convention** | raw `v` rounded first -> `(32.3 + 40.2) / 2 = 36.25` -> rounded half-up | **36.3** |
 
-JSON ghi **36.3**. Chenh 0.1 nay la do **lam tron hai lan**, khong phai do
-half-up: neu median tho la 36.242 thi ca half-up va nua-ve-chan deu cho 36.2.
+The JSON says **36.3**. This 0.1 difference comes from **rounding twice**, not from
+half-up: with a raw median of 36.242, both half-up and half-to-even give 36.2.
 
-### Lam tron: `ROUND_HALF_UP`, khong dung `round()` cua Python
-Day la mot van de **rieng**, khong lien quan den chuyen lam tron hai lan o tren.
-`round()` lam tron "nua ve so chan": `round(0.25, 1)` ra `0.2`, `round(100.5)`
-ra `100`. Nguoi doc bao cao mong doi 0.5 lam tron **len**.
+### Rounding: `ROUND_HALF_UP`, not Python's `round()`
+This is a **separate** issue, unrelated to the double rounding above.
+`round()` rounds "half to even": `round(0.25, 1)` gives `0.2`, `round(100.5)`
+gives `100`. Report readers expect 0.5 to round **up**.
 
-> **Vi du thuc te quan trong:** forest_area nam 2022, median la trung binh cua
-> hai `v` da lam tron 43.9 va 47.2 = **45.55** (so nay ket thuc bang dung so 5,
-> nen quy tac lam tron quyet dinh ket qua). `ROUND_HALF_UP` cho **45.6**.
-> `round(45.55, 1)` cua Python cho **45.5**. Chenh 0.1 nay doi `gap` cua ca
-> 8 nuoc.
-> `coal_electricity` 2022 cung gap ca hai van de mot luc: `36.25` ket thuc bang
-> so 5 (nen half-up cho 36.3, `round()` cho 36.2) VA lech so voi median tho
-> 36.242 (do lam tron hai lan).
+> **Important real example:** forest_area in 2022, the median is the average of
+> two rounded `v` values 43.9 and 47.2 = **45.55** (this number ends in exactly 5,
+> so the rounding rule decides the result). `ROUND_HALF_UP` gives **45.6**.
+> Python's `round(45.55, 1)` gives **45.5**. That 0.1 difference changes the `gap` of all
+> 8 countries.
+> `coal_electricity` 2022 hits both issues at once: `36.25` ends in
+> 5 (so half-up gives 36.3, `round()` gives 36.2) AND differs from the raw median
+> 36.242 (because of rounding twice).
 
-`decimals = 0` thi ghi ra **so nguyen** (`51234` chu khong phai `51234.0`), ap
-dung cho tree_cover_loss (hectares) va energy_use_per_person (kg dau tuong duong).
+`decimals = 0` writes **integers** (`51234`, not `51234.0`); this
+applies to tree_cover_loss (hectares) and energy_use_per_person (kg of oil equivalent).
 
 ### Median
-Lay tu **tat ca nuoc co so trong nam do**, ke ca nuoc dang xem. `n` = so nuoc
-co so (co the nho hon 8). `n` le thi lay gia tri giua; `n` chan thi lay trung
-binh hai gia tri giua **roi lam tron lai** ve `decimals`. Vi sao phai lam tron
-lai: `(20.1 + 20.2) / 2 = 20.15`, nhieu hon mot chu so thap phan so voi
-`decimals = 1`, trang se hien thi khong dong nhat.
-Cac gia tri dau vao la `v` **da lam tron**, khong phai gia tri tho -- xem
-"Quy uoc lam tron" o tren, ke ca he qua lech 1 don vi cuoi.
+Taken from **all countries reporting that year**, including the country being viewed. `n` = number of countries
+with a value (can be less than 8). Odd `n` takes the middle value; even `n` takes the average
+of the two middle values **and rounds it again** to `decimals`. Why round
+again: `(20.1 + 20.2) / 2 = 20.15`, one more decimal place than
+`decimals = 1`, and the page would display inconsistently.
+The inputs are the **rounded** `v` values, not the raw values -- see
+"Rounding convention" above, including the consequence of differing by 1 unit in the last digit.
 
-### Nguong `n >= 3` (moi them, nhom da chot 2026-10-08)
-`n < 3` thi **van ghi `median` va `n`** (de bieu do duong khong bi dut vo co)
-nhung `rank`, `verdict`, `gap` deu la `null`. Vi sao: `n = 1` thi median bang
-chinh gia tri nuoc do nen `gap = 0` va verdict luon "level" -- vo nghia.
-Sau khi cat theo proposal chi con **2 o bi anh huong**:
-energy_intensity 2022 va renewable_energy 2022, ca hai **chi co Laos**.
+### The `n >= 3` threshold (new, team decision 2026-10-08)
+With `n < 3`, **`median` and `n` are still written** (so the line chart does not break for no reason)
+but `rank`, `verdict` and `gap` are all `null`. Why: with `n = 1` the median equals
+that country's own value, so `gap = 0` and the verdict is always "level" -- meaningless.
+After cutting to the proposal range, only **2 cells are affected**:
+energy_intensity 2022 and renewable_energy 2022, both with **only Laos**.
 
-### Hang
-Hang 1 = tot nhat theo `direction`. Cach tinh:
-**hang = 1 + so nuoc tot hon han nuoc do.** Cong thuc nay tu dong cho ra
-`1, 2, 2, 4` khi co hoa, khong can xu ly hoa rieng.
-So sanh tren `v` **da lam tron**, nen hai gia tri tho khac nhau ma lam tron ra
-bang nhau thi **cung hang**. Vi du thuc te: `resource_depletion` 2004, Indonesia
-`5.88376...` va Laos `5.88231...` deu ra `5.88` o `decimals = 2` nen **cung
-hang 4**, va nuoc tiep theo nhay sang **hang 6**.
-`direction: "none"` (tree_cover_loss, energy_use_per_person) thi `rank = null`
-va `verdict = null`: khong the noi mat bao nhieu hectares rung la tot hay xau
-ma khong biet dien tich rung ban dau.
-> Nhung **`median` va `gap` van duoc tinh** cho 2 chi so nay, vi bieu do duong
-> van ve duong median net dut cho chung.
+### Rank
+Rank 1 = best for the `direction`. Method:
+**rank = 1 + the number of countries strictly better than it.** This formula gives
+`1, 2, 2, 4` automatically when there are ties, with no special tie handling.
+The comparison uses **rounded** `v`, so two different raw values that round to
+the same number **share a rank**. Real example: `resource_depletion` 2004, Indonesia
+`5.88376...` and Laos `5.88231...` both become `5.88` at `decimals = 2`, so they **share
+rank 4**, and the next country jumps to **rank 6**.
+For `direction: "none"` (tree_cover_loss, energy_use_per_person), `rank = null`
+and `verdict = null`: losing some number of hectares of forest cannot be called good or bad
+without knowing the original forest area.
+> But **`median` and `gap` are still computed** for these 2 indicators, because the line chart
+> still draws the dashed median line for them.
 
 ### Verdict
-`gap = gia tri nuoc - median`, roi **lam tron lai** ve `decimals`. Vi sao phai
-lam tron lai du hai so dau vao da lam tron: `20.1 - 17.3` ra
-`2.8000000000000003` trong Python, va con so rac do se chay thang len tooltip.
+`gap = country value - median`, then **rounded again** to `decimals`. Why round
+again even though both inputs are already rounded: `20.1 - 17.3` gives
+`2.8000000000000003` in Python, and that garbage number would go straight onto the tooltip.
 
-- Buoc 1, co nam trong vung "ngang nhau" khong:
-  - mode `abs`: `|gap| <= tol`, `tol` tinh bang **diem phan tram** (vi du 3 diem).
-  - mode `rel`: `|gap| <= tol * |median|`, `tol` la **ty le** (0.05 = 5%).
-    `median = 0` thi tich ra 0, nen chi "level" khi gia tri **dung bang 0**.
-- Buoc 2, chua "level" thi chi con xet dau cua `gap`:
-  - `higher`: `gap > 0` la `better` (nhieu rung hon thi tot hon).
-  - `lower`: `gap < 0` la `better` (it o nhiem hon thi tot hon).
+- Step 1, is it inside the "level" band:
+  - mode `abs`: `|gap| <= tol`, `tol` in **percentage points** (e.g. 3 points).
+  - mode `rel`: `|gap| <= tol * |median|`, `tol` is a **ratio** (0.05 = 5%).
+    With `median = 0` the product is 0, so it is "level" only when the value is **exactly 0**.
+- Step 2, if not "level", only the sign of `gap` matters:
+  - `higher`: `gap > 0` is `better` (more forest is better).
+  - `lower`: `gap < 0` is `better` (less pollution is better).
 
-### `rep` (gia tri lap)
-`rep = true` khi cung mot gia tri lap **tu 3 nam lien tiep tro len**; danh dau
-**moi nam** trong chuoi, khong chi nam dau. `null` **cat** chuoi
-(2005-2006-(thieu)-2008 khong phai chuoi 3 nam). Xet tren gia tri **goc** truoc
-lam tron, vi lam tron co the bien 22.781 va 22.784 thanh cung 22.8 va tao ra
-mot chuoi lap **gia**.
-> Kiem lai dung voi vi du trong proposal: `freshwater_withdrawals` cua Viet Nam
-> giu **22.8** lien tuc **2005-2021 (17 nam)**. (Proposal ghi 22.78%; voi
-> `decimals = 1` trang se hien 22.8%.)
+### `rep` (repeated values)
+`rep = true` when the same value repeats **for 3 or more consecutive years**; **every year**
+in the run is flagged, not only the first. `null` **breaks** a run
+(2005-2006-(missing)-2008 is not a 3-year run). Computed on the **raw** values before
+rounding, because rounding can turn 22.781 and 22.784 into the same 22.8 and create
+a **false** repeated run.
+> Checked against the proposal's example: Viet Nam's `freshwater_withdrawals`
+> stays at **22.8** for **2005-2021 (17 years)**. (The proposal says 22.78%; with
+> `decimals = 1` the page shows 22.8%.)
 
 ### `latestYear`
-Nam **moi nhat** co it nhat **6 tren 8** nuoc co so. Vi sao khong lay nam cuoi:
-nam cuoi cua vai chi so chi co mot nuoc (energy_intensity 2022 **chi co Laos**),
-mo trang vao nam do thi bieu do cot gan nhu trong.
+The **most recent** year with at least **6 of 8** countries reporting. Why not the last year:
+the last year of some indicators has only one country (energy_intensity 2022 has **only Laos**),
+and opening the page on that year would show an almost empty bar chart.
 
-### Nuoc thieu so trong mot nam
-**Bo han muc do khoi `countries`** (khong ghi `null`). Chot mot cach va dung
-nhat quan. JS chi can `if (!entry)`.
-Phan biet hai truong hop:
-- Khong co muc trong `countries` = **khong co so**.
-- Co muc nhung `rank`/`verdict`/`gap` deu `null` = **co so nhung `n < 3`,
-  khong du de so sanh**.
+### A country with no value in a year
+**Its entry is left out of `countries` entirely** (no `null` is written). One approach, used
+consistently. JS only needs `if (!entry)`.
+Two cases to tell apart:
+- No entry in `countries` = **no value**.
+- An entry with `rank`/`verdict`/`gap` all `null` = **has a value but `n < 3`,
+  not enough to compare**.
 
 ### `meta`
-`accessed` la **mot hang so** `ACCESSED_DATE` trong `scripts/indicators.py`.
+`accessed` is **a constant**, `ACCESSED_DATE`, in `scripts/indicators.py`.
 
-> **Ngay tai CSV da duoc xac nhan: 2/10/2026**, tuc `ACCESSED_DATE =
-> "2026-10-02"`. Quan xac nhan ngay 2026-10-08. **Khong con muc nao cho xac
-> nhan.**
+> **The CSV download date is confirmed: 2026-10-02**, i.e. `ACCESSED_DATE =
+> "2026-10-02"`. Confirmed on 2026-10-08. **Nothing is left to confirm.**
 
-**Khong dung `mtime` cua file CSV:** `mtime` la lan ghi file cuoi cung, nen chi
-can mo CSV bang LibreOffice roi luu lai la con so doi -- mot nguon sai am tham.
-Tren may Quan, `mtime` cua `WB_ESG.csv` la 2026-10-07, **lech 5 ngay** so voi
-ngay tai that -- dung bang chung cho thay vi sao khong duoc dung `mtime`.
+**Do not use the CSV file's `mtime`:** `mtime` is the last time the file was written, so just
+opening the CSV in LibreOffice and saving it changes the value -- a silent source of error.
+On the data lead's machine, the `mtime` of `WB_ESG.csv` was 2026-10-07, **5 days off** from
+the real download date -- exactly the evidence for why `mtime` must not be used.
 
-Footer cua trang doc truong nay **truc tiep tu JSON**, khong go tay.
-Neu sau nay phai doi ngay (tai lai CSV moi) thi sua **hai cho**: hang so
-`ACCESSED_DATE` trong `scripts/indicators.py` va `SPEC_ACCESSED` trong
-`scripts/verify_data.py`, roi chay lai `build_data.py` va `verify_data.py`
-(co y de hai cho, xem muc 5 y 10).
+The page footer reads this field **directly from the JSON**; it is never typed by hand.
+If the date ever has to change (a new CSV is downloaded), edit **two places**: the
+`ACCESSED_DATE` constant in `scripts/indicators.py` and `SPEC_ACCESSED` in
+`scripts/verify_data.py`, then rerun `build_data.py` and `verify_data.py`
+(the two places are deliberate, see section 5 item 10).
 
-`baseYear: 2010` con de nguyen, chua dung toi (Task 6 moi can, va moc 1990 vs
-2010 chua chot).
+`baseYear: 2010` is left as is and not used yet (only needed for the derived numbers in the
+story section, and the 1990 vs 2010 baseline has not been decided).
 
-### `repShare` -- ty le o bi danh `rep`, tinh san cho tung chi so
-`repShare = (so o rep) / (so o co so)`, lam tron **3 chu so, nua len tren**
-bang `Decimal`. Chi so khong co o nao co so thi `repShare = 0.0`, **khong chia
-cho 0** (chua xay ra voi 12 chi so hien tai, de san de khong vo khi them chi so).
+### `repShare` -- share of `rep`-flagged cells, precomputed per indicator
+`repShare = (rep cells) / (cells with a value)`, rounded to **3 digits, half up**,
+with `Decimal`. An indicator with no cells with a value gets `repShare = 0.0`, **never a division
+by 0** (does not happen with the current 12 indicators; it is there so nothing breaks when an indicator is added).
 
-Vi sao can truong nay: `rep` cao o vai chi so la **binh thuong**, khong phai
-bat thuong. Neu trang lam nhat tung diem `rep` thi `protected_areas` co 85.2%
-diem bi lam nhat -> nhan tro thanh nhieu, khong con y nghia canh bao.
-Script tinh san ty le de trang **quyet dinh cach hien**, chu khong de trang tu
-dem (giu nguyen tac trinh duyet khong tinh gi).
+Why this field exists: a high `rep` share is **normal** for some indicators, not
+unusual. If the page faded every `rep` point, `protected_areas` would have 85.2%
+of its points faded -> the fading becomes noise and loses its warning value.
+The script precomputes the share so the page can **choose how to show it**, instead of letting the page
+count it itself (keeping the rule that the browser computes nothing).
 
-Quy tac frontend: `repShare <= 0.3` thi lam nhat tung diem; `repShare > 0.3`
-thi khong lam nhat diem nao, chi hien mot dong chu thich chung neu ti le.
-Nguong 0.3 chon tu cho cach biet lon nhat trong du lieu that: 3 chi so o
-0.438-0.852, chin chi so con lai deu `<= 0.141`, khong co chi so nao nam giua.
+Frontend rule: `repShare <= 0.3` fades each point; `repShare > 0.3`
+fades no points and only shows one general note stating the share.
+The 0.3 threshold was chosen at the largest gap in the real data: 3 indicators are at
+0.438-0.852, the other nine are all `<= 0.141`, and no indicator falls in between.
 
 ---
 
-## 4c. Quyet dinh nguong `level` (nhom chot 2026-10-08)
+## 4c. `level` threshold decision (team decision 2026-10-08)
 
-| chi so | truoc | sau | % level truoc | % level sau |
+| indicator | before | after | % level before | % level after |
 |---|---|---|---|---|
-| `energy_intensity` | rel 0.05 | **giu nguyen** rel 0.05 | 25.0% | 25.0% |
+| `energy_intensity` | rel 0.05 | **unchanged** rel 0.05 | 25.0% | 25.0% |
 | `resource_depletion` | rel 0.05 | **abs 1.0** | **4.4%** | **27.1%** |
 | `net_forest_depletion` | rel 0.05 | **abs 1.0** | 61.8% | 61.8% |
 
-Chin chi so kia khong doi. Sau khi doi, % level cua 10 chi so co verdict nam
-trong dai **9.6% - 33.7%**, tru `net_forest_depletion` 61.8% (ly do rieng, xem
-muc 6.1).
+The other nine indicators are unchanged. After the change, the % level of the 10 indicators with a verdict is
+in the **9.6% - 33.7%** band, except `net_forest_depletion` at 61.8% (a separate reason, see
+section 6.1).
 
-### Vi sao `resource_depletion` doi tu rel sang abs
-`median` tung nam chi **1.01 den 6.88**, nhung `|gap|` trung vi la **2.95**.
-Nen `rel 0.05` cho nguong chi 0.05-0.34, tuc **nho hon gap dien hinh gan 10
-lan**, va "ngang median" gan nhu khong the dat: chi **11 tren 251** o.
-`abs 1.0` cho 27.1%, ngang cac chi so khac, va de viet vao bao cao:
-*"chenh duoi 1 diem phan tram GNI thi coi la ngang nhau."*
-Phuong an giu `rel` phai len tan `rel 0.30` moi ra 25.5% -- mot con so kho
-giai thich.
+### Why `resource_depletion` changed from rel to abs
+The yearly `median` is only **1.01 to 6.88**, but the median `|gap|` is **2.95**.
+So `rel 0.05` gives a threshold of only 0.05-0.34, i.e. **almost 10 times smaller than a typical
+gap**, and "level with the median" is almost never reached: only **11 of 251** cells.
+`abs 1.0` gives 27.1%, in line with the other indicators, and is easy to state in the report:
+*"a difference of less than 1 percentage point of GNI counts as level."*
+Keeping `rel` would need as much as `rel 0.30` to reach 25.5% -- a number that is hard
+to explain.
 
-### Vi sao `net_forest_depletion` BUOC phai doi, du ket qua khong doi
-Cong thuc `rel` la `|gap| <= tol * |median|`. Chi so nay co **`median` = 0 ca
-32 nam**, nen nguong luon bang `tol * 0 = 0` **voi MOI tol**. Da thu tan
-**`rel 5.0` (tuc 500%)**: ket qua y nguyen 61.8%, khong doi mot o nao.
-Day la mot **phep suy bien**, khong phai mot nguong.
+### Why `net_forest_depletion` HAD to change, even though the result is the same
+The `rel` formula is `|gap| <= tol * |median|`. This indicator has **`median` = 0 in all
+32 years**, so the threshold is always `tol * 0 = 0` **for ANY tol**. Tested up to
+**`rel 5.0` (i.e. 500%)**: the result stays at 61.8%, not a single cell changes.
+This is a **degenerate case**, not a threshold.
 
-`abs 1.0` cho ket qua giong het (`0 better / 155 level / 96 worse`) nhung
-**khong con dua tren cong thuc suy bien**. Phan phoi la **hai cuc**: 5 nuoc o
-dung 0, con gia tri khac 0 nho nhat la **1.51**. Nen `abs 0.25`, `0.5`, `1.0`,
-`1.5` deu cho y nguyen 61.8%; phai `abs 1.6` moi nhich len 62.5%.
-Chon `1.0` de **cung mode va cung tol voi `resource_depletion`** (cung don vi
-% of GNI), de giai thich trong bao cao.
+`abs 1.0` gives exactly the same result (`0 better / 155 level / 96 worse`) but
+**no longer rests on a degenerate formula**. The distribution is **bimodal**: 5 countries are
+exactly 0, and the smallest non-zero value is **1.51**. So `abs 0.25`, `0.5`, `1.0`,
+`1.5` all give exactly 61.8%; only `abs 1.6` nudges it up to 62.5%.
+`1.0` was chosen to **share the mode and tol with `resource_depletion`** (same unit,
+% of GNI), which is easier to explain in the report.
 
-> **Noi thang: khong nguong nao sua duoc chi so nay.** Van de o du lieu, khong
-> o nguong. Nhom da chot **giu chi so va giu verdict**, kem mot dong chu thich
-> rieng tren giao dien. Chi tiet o muc 6.1.
+> **Plainly: no threshold can fix this indicator.** The problem is in the data, not in
+> the threshold. The team decided to **keep the indicator and keep the verdict**, with a dedicated
+> note on the interface. Details in section 6.1.
 
 ---
 
-## 4d. Dinh dang file JSON (nhom chot 2026-10-08)
+## 4d. JSON file format (team decision 2026-10-08)
 
-**`values.json` moi o mot dong de diff review duoc bang mat.**
+**`values.json` has one cell per line so diffs can be reviewed by eye.**
 
-| file | dinh dang |
+| file | format |
 |---|---|
-| `values.json` | phan dau (`meta`, `countries`, `indicators`) `indent=1`; mang `rows` mo va dong tren dong rieng, **moi o `{c,i,y,v,rep}` mot dong** |
+| `values.json` | header (`meta`, `countries`, `indicators`) `indent=1`; the `rows` array opens and closes on its own lines, **one `{c,i,y,v,rep}` cell per line** |
 | `snapshot.json` | `indent=1` |
 | `coverage.json` | `indent=1` |
 
-Ba lua chon da can nhac:
+Three options were considered:
 
-| cach ghi | kich thuoc `values.json` | so dong | review diff duoc? |
+| format | `values.json` size | lines | diff reviewable? |
 |---|---|---|---|
-| nen het (`separators=(",", ":")`) | 181 KB | **1** | khong -- git chi hien "1 dong doi" |
-| `indent=1` cho ca `rows` | 266 KB | **19.687** | ve ly thuyet duoc, thuc te qua dai |
-| **moi o mot dong** (dang chon) | **215 KB** | **3.031** | **duoc** |
+| minified (`separators=(",", ":")`) | 181 KB | **1** | no -- git only shows "1 line changed" |
+| `indent=1` for `rows` too | 266 KB | **19,687** | in theory, but far too long in practice |
+| **one cell per line** (chosen) | **215 KB** | **3,031** | **yes** |
 
-(Ba so tren la do THAT, khong phai uoc luong.)
+(The three figures above are MEASURED, not estimated.)
 
-Ca ba cach cho **cung mot noi dung**; chi khac khoang trang. Doi tu cach 1 sang
-cach 3 lam file to them 34 KB (181 -> 215 KB), tong `data/*.json` **460 KB** --
-khong dang ke voi mot trang tinh.
+All three give **the same content**; only the whitespace differs. Moving from option 1 to
+option 3 makes the file 34 KB larger (181 -> 215 KB), with total `data/*.json` at **460 KB** --
+negligible for a static page.
 
-Thu tu khoa va thu tu dong **co dinh**: `meta`, `countries`, `indicators`,
-`rows` o cap ngoai; `c`, `i`, `y`, `v`, `rep` trong moi o. `json.dumps` khong
-sap xep lai khi `sort_keys=False` (mac dinh), nen chay lai script voi cung du
-lieu cho ra file **giong het tung byte** -- `git diff` rong. Dieu nay quan trong:
-neu moi lan chay lai ma file doi thu tu thi khong ai phan biet duoc
-"du lieu doi" voi "chi dinh dang doi".
+Key order and row order are **fixed**: `meta`, `countries`, `indicators`,
+`rows` at the top level; `c`, `i`, `y`, `v`, `rep` inside each cell. `json.dumps` does not
+reorder when `sort_keys=False` (the default), so rerunning the script with the same
+data produces a **byte-identical** file -- `git diff` is empty. This matters:
+if every rerun reordered the file, nobody could tell
+"the data changed" from "only the formatting changed".
 
-Moi file ket thuc bang mot newline.
+Every file ends with a newline.
 
-Cach chung minh doi dinh dang khong lam doi noi dung (da chay 2026-10-08):
+How it was shown that the format change did not change the content (run on 2026-10-08):
 
 ```fish
 python3 -c "
@@ -377,155 +378,155 @@ for f in ('data/values.json','data/snapshot.json','data/coverage.json'):
     print(f, old==new)
 "
 ```
-Ket qua: `True` cho ca ba file, va thu tu khoa + thu tu 2.776 dong cung giu nguyen.
+Result: `True` for all three files, and the key order + order of the 2,776 rows are also unchanged.
 
 ---
 
-## 4b. `scripts/verify_data.py` -- kiem tra doc lap (Task 5)
+## 4b. `scripts/verify_data.py` -- independent check (Task 5)
 
-### Tai sao can mot script thu hai
-Neu chi co `build_data.py` thi khong ai biet no dung. Script thu hai tinh lai
-**tu CSV** roi so voi JSON. Nhung mot script thu hai chi co gia tri khi no
-**doc lap**: neu no goi lai ham cua `build_data.py` thi mot loi logic chung se
-lot qua **ca hai** va van bao PASS.
+### Why a second script is needed
+With only `build_data.py`, nobody knows it is correct. A second script recomputes
+**from the CSV** and compares with the JSON. But a second script is only worth anything if it is
+**independent**: if it called `build_data.py`'s functions, a shared logic error would
+slip through **both** and still report PASS.
 
-### Doc lap o cho nao, cu the
+### Where exactly it is independent
 | | `build_data.py` | `verify_data.py` |
 |---|---|---|
-| Doc CSV | `pandas.read_csv` theo khoi | module `csv` chuan |
-| Lam tron | `Decimal` + `ROUND_HALF_UP` | `Fraction` (so huu ty chinh xac) |
-| Median | ham tu viet | `statistics.median` |
-| `rep` | cong don tung nam | nhay tung doan bang nhau |
-| `repShare` | chia bang `Decimal` | chia bang `Fraction` |
-| Bang 12 chi so | `scripts/indicators.py` | **go lai bang tay trong chinh file** |
+| Reading the CSV | `pandas.read_csv` in chunks | standard `csv` module |
+| Rounding | `Decimal` + `ROUND_HALF_UP` | `Fraction` (exact rational numbers) |
+| Median | hand-written function | `statistics.median` |
+| `rep` | accumulates year by year | jumps over runs of equal values |
+| `repShare` | divides with `Decimal` | divides with `Fraction` |
+| 12-indicator table | `scripts/indicators.py` | **retyped by hand inside the file itself** |
 
-Dong cuoi la quan trong nhat: bang `SPEC` trong `verify_data.py` duoc **go lai
-tu `data/README.md` va proposal**, **khong** import tu `indicators.py`. Nen neu
-`indicators.py` bi go sai mot con so (`decimals`, `tol`, khoang nam,
-`direction`) thi `verify_data.py` bat duoc. Doi lai, khi nhom doi mot quy tac
-that thi **phai sua ca hai cho** -- day la chu y, khong phai thieu sot.
+The last row matters most: the `SPEC` table in `verify_data.py` is **retyped
+from `data/README.md` and the proposal**, **not** imported from `indicators.py`. So if
+`indicators.py` has a mistyped number (`decimals`, `tol`, year range,
+`direction`), `verify_data.py` catches it. In return, when the team changes a real
+rule, **both places must be edited** -- this is deliberate, not an oversight.
 
-### No kiem nhung gi
-`meta.source`, `meta.accessed`, danh sach 8 nuoc (**ke ca thu tu**), metadata
-tung chi so; so dong (2.776 khi du 12 chi so); khong co dong trung; tung gia tri
-bang gia tri goc lam tron; **`null` khi va chi khi CSV khong co dong do**;
-`v = 0` chi khi CSV that su la 0 hoac la so rat nho lam tron ve 0; `rep`;
-`median`; `n`; `rank` (hoa kieu 1, 2, 2, 4); `verdict`; `gap`; `repShare`;
-quy tac `n < 3`;
-quy tac `direction none`; nuoc thieu so khong co muc trong `countries`;
-`latestYear`; `coverage`; khong co `NaN`/`Infinity`.
+### What it checks
+`meta.source`, `meta.accessed`, the list of 8 countries (**including order**), each indicator's
+metadata; row count (2,776 with all 12 indicators); no duplicate rows; every value
+equals the raw value rounded; **`null` if and only if the CSV has no such row**;
+`v = 0` only when the CSV really is 0 or a tiny number rounded to 0; `rep`;
+`median`; `n`; `rank` (ties as 1, 2, 2, 4); `verdict`; `gap`; `repShare`;
+the `n < 3` rule;
+the `direction none` rule; countries with no value have no entry in `countries`;
+`latestYear`; `coverage`; no `NaN`/`Infinity`.
 
-Chay duoc cho **ca ban chi co forest_area lan ban du 12 chi so**: no lay danh
-sach chi so **tu chinh `values.json`** roi doi chieu tung chi so voi `SPEC`.
+It works for **both the forest_area-only version and the full 12-indicator version**: it takes the
+indicator list **from `values.json` itself** and then compares each indicator with `SPEC`.
 
-### Ket qua
-- du 12 chi so: **12.260 phep kiem, PASS** (khoang 3 giay).
-- rieng forest_area: **1.217 phep kiem, PASS**.
+### Results
+- all 12 indicators: **12,260 checks, PASS** (about 3 seconds).
+- forest_area only: **1,217 checks, PASS**.
 
-### Da chung minh no BAT duoc loi
-Mot script luon PASS thi vo gia tri. Da tiem **14 loi** vao ban copy, **ca 14
-deu bi bat**:
+### Shown to CATCH errors
+A script that always passes is worthless. **14 errors** were injected into a copy, and **all 14
+were caught**:
 
-| loi tiem vao | bi bat |
+| injected error | caught |
 |---|---|
-| doi mot gia tri (VNM forest 2022 -> 47.3) | co |
-| doi mot `null` thanh `0` | co |
-| lat mot co `rep` | co |
-| median 45.6 -> 45.5 (dung loi `round()` nua-ve-chan) | co |
-| doi hang cua mot nuoc | co |
-| gan `rank` cho `tree_cover_loss` (`direction none`) | co |
-| xoa `gap` cua `energy_use_per_person` (`direction none`) | co |
-| dien `rank`/`verdict`/`gap` vao nam `n < 3` | co |
-| `latestYear` 2021 -> 2022 (nam chi co 1 nuoc) | co |
-| `accessed` -> sai ngay | co |
-| giu muc trong `countries` cho nuoc thieu so | co |
-| `coverage.count` 33 -> 32 | co |
-| `decimals` trong `values.json` 1 -> 2 | co |
-| nhet `NaN` vao `values.json` | co |
+| change one value (VNM forest 2022 -> 47.3) | yes |
+| change one `null` to `0` | yes |
+| flip one `rep` flag | yes |
+| median 45.6 -> 45.5 (the `round()` half-to-even mistake) | yes |
+| change one country's rank | yes |
+| give `tree_cover_loss` a `rank` (`direction none`) | yes |
+| delete the `gap` of `energy_use_per_person` (`direction none`) | yes |
+| fill `rank`/`verdict`/`gap` in an `n < 3` year | yes |
+| `latestYear` 2021 -> 2022 (a year with only 1 country) | yes |
+| `accessed` -> wrong date | yes |
+| keep a `countries` entry for a country with no value | yes |
+| `coverage.count` 33 -> 32 | yes |
+| `decimals` in `values.json` 1 -> 2 | yes |
+| put a `NaN` into `values.json` | yes |
 
-Tiem them 3 loi nua sau khi doi nguong va them `repShare`, **ca 3 deu bi bat**,
-moi loi bao dung **1 dong**, khong nhieu:
+3 more errors were injected after the threshold change and the addition of `repShare`; **all 3 were caught**,
+each reported in exactly **1 line**, not more:
 
-| loi tiem vao | thong bao |
+| injected error | message |
 |---|---|
-| `tol` cua `resource_depletion` trong `values.json` ve `rel 0.05` | `resource_depletion.verdict = {'mode': 'rel', 'tol': 0.05}, ky vong {'mode': 'abs', 'tol': 1.0}` |
-| `repShare` cua `protected_areas` 0.852 -> 0.85 | `repShare = 0.85, tinh lai ra 0.852 (75 o rep / 88 o co so)` |
-| `verdict` cua VNM `net_forest_depletion` 2010 (n = 8) -> `better` | `verdict = 'better', tinh lai ra 'level'` |
+| `resource_depletion`'s `tol` in `values.json` back to `rel 0.05` | `resource_depletion.verdict = {'mode': 'rel', 'tol': 0.05}, expected {'mode': 'abs', 'tol': 1.0}` |
+| `protected_areas` `repShare` 0.852 -> 0.85 | `repShare = 0.85, recomputed gives 0.852 (75 rep cells / 88 cells with a value)` |
+| VNM `net_forest_depletion` 2010 `verdict` (n = 8) -> `better` | `verdict = 'better', recomputed gives 'level'` |
 
-Day la bang chung cho bao cao va cho checklist nghiem thu cua Phuong.
+This is evidence for the report and for the acceptance checklist.
 
 ---
 
-## 5. Cho de sai (doc ky phan nay)
+## 5. Easy mistakes (read this section carefully)
 
-1. **Tach CSV bang dau phay thu cong** -> lech cot vi nhan chi so freshwater co
-   dau phay. Luon dung `csv` module / pandas.
-2. **`round()` cua Python** lam tron nua ve so chan, khong phai nua len tren.
-   Dung `Decimal` + `ROUND_HALF_UP`.
-3. **Doi sang `float` truoc khi lam tron** -> sai o chu so cuoi.
-4. **Khong lam tron lai `gap` va `median`** -> ra `2.8000000000000003` tren tooltip.
-4b. **Lan "lam tron hai lan" voi "half-up".** `median` trong JSON co the lech
-    toi da 1 don vi cuoi so voi median cua gia tri tho; do la vi **lam tron hai
-    lan** (gia tri tho -> `v`, roi `v` -> `median`), **khong** phai vi half-up.
-    Day la quy uoc co y cua nhom, khong phai loi. Vi du: `coal_electricity` 2022
-    median tho 36.242 nhung JSON ghi 36.3.
-5. **Tuong thieu du lieu la o trong** -> CSV nay thieu han dong.
-6. **Lan `v = 0` voi thieu du lieu.** Co **221 dong co `v = 0` thuc su**:
-   217 la 0 **that** trong CSV, 4 dong la gia tri cuc nho
-   (KHM resource_depletion 2017, 2018, 2019, 2020 -- tu `8.6e-05` den `2.2e-04`) lam tron ve `0.00` o
-   `decimals = 2`. Khong dong nao la do thieu du lieu.
-7. **Tinh `rep` tren gia tri da lam tron** -> sinh chuoi lap gia.
-8. **Nho rang `snapshot.json` phai co DU MOI NAM**, khong chi `latestYear`.
-9. **Mo CSV bang LibreOffice roi luu lai.** Calc co the doi dinh dang so va se
-   doi `mtime`. Vi vay `accessed` khong con lay tu `mtime`. Luon dong Calc truoc
-   khi chay script.
-10. **HAI NOI PHAI SUA CUNG LUC khi doi mot quy tac.** `scripts/indicators.py`
-    va bang `SPEC` trong `scripts/verify_data.py` **co y** khong dung chung
-    nguon -- do la ca ly do `verify_data.py` bat duoc loi go sai. Hau qua: khi
-    nhom doi mot quy tac **that** thi phai sua **ca hai**, roi chay lai
-    `verify_data.py`. Cac truong de quen:
+1. **Splitting the CSV on commas by hand** -> columns shift because the freshwater label has
+   a comma. Always use the `csv` module / pandas.
+2. **Python's `round()`** rounds half to even, not half up.
+   Use `Decimal` + `ROUND_HALF_UP`.
+3. **Converting to `float` before rounding** -> wrong last digit.
+4. **Not re-rounding `gap` and `median`** -> `2.8000000000000003` on the tooltip.
+4b. **Confusing "rounding twice" with "half-up".** The `median` in the JSON can differ by
+    at most 1 unit in the last digit from the median of the raw values; that is because of **rounding
+    twice** (raw value -> `v`, then `v` -> `median`), **not** because of half-up.
+    This is a deliberate team convention, not a bug. Example: `coal_electricity` 2022
+    raw median 36.242 but the JSON says 36.3.
+5. **Assuming missing data is an empty cell** -> in this CSV the row is simply missing.
+6. **Confusing `v = 0` with missing data.** There are **221 rows with a real `v = 0`**:
+   217 are a **real** 0 in the CSV, and 4 rows are tiny values
+   (KHM resource_depletion 2017, 2018, 2019, 2020 -- from `8.6e-05` to `2.2e-04`) rounded to `0.00` at
+   `decimals = 2`. None of them comes from missing data.
+7. **Computing `rep` on rounded values** -> creates false repeated runs.
+8. **Remember that `snapshot.json` must have EVERY YEAR**, not only `latestYear`.
+9. **Opening the CSV in LibreOffice and saving it.** Calc can change the number format and will
+   change `mtime`. That is why `accessed` no longer comes from `mtime`. Always close Calc before
+   running the scripts.
+10. **TWO PLACES MUST BE EDITED TOGETHER when a rule changes.** `scripts/indicators.py`
+    and the `SPEC` table in `scripts/verify_data.py` **deliberately** do not share a
+    source -- that is exactly why `verify_data.py` catches typos. Consequence: when the
+    team changes a **real** rule, **both** must be edited, then
+    `verify_data.py` rerun. Fields that are easy to forget:
 
-    | doi gi | sua o `indicators.py` | sua o `verify_data.py` |
+    | what changes | edit in `indicators.py` | edit in `verify_data.py` |
     |---|---|---|
-    | `direction`, mode/`tol` cua `level`, `decimals`, khoang nam | `INDICATORS` | bang `SPEC` |
-    | ngay truy cap | `ACCESSED_DATE` | `SPEC_ACCESSED` |
-    | nguong `n` toi thieu | `MIN_N_FOR_COMPARISON` | `SPEC_MIN_N` |
-    | quy tac `latestYear` | `MIN_COUNTRIES_FOR_LATEST_YEAR` | `SPEC_MIN_N_LATEST_YEAR` |
-    | so chu so cua `repShare` | tham so trong `rep_share()` | `SPEC_REP_SHARE_DECIMALS` |
-    | **quy uoc lam tron** (median/gap/rank tinh tu `v` da lam tron, median lam tron lan nua) | `round_to()`, `median_of()`, `subtract()`, `ranks_for()` va cho goi chung trong `build()` | `round_half_up()`, `fraction_to_rounded()` va cho goi chung trong `check_snapshot()` |
-    | them/bo chi so (doi tong so nam) | `INDICATORS` | `SPEC` va `SPEC_TOTAL_ROWS_ALL_12` |
+    | `direction`, `level` mode/`tol`, `decimals`, year range | `INDICATORS` | `SPEC` table |
+    | access date | `ACCESSED_DATE` | `SPEC_ACCESSED` |
+    | minimum `n` threshold | `MIN_N_FOR_COMPARISON` | `SPEC_MIN_N` |
+    | `latestYear` rule | `MIN_COUNTRIES_FOR_LATEST_YEAR` | `SPEC_MIN_N_LATEST_YEAR` |
+    | number of digits of `repShare` | parameter in `rep_share()` | `SPEC_REP_SHARE_DECIMALS` |
+    | **rounding convention** (median/gap/rank from rounded `v`, median rounded again) | `round_to()`, `median_of()`, `subtract()`, `ranks_for()` and where they are called in `build()` | `round_half_up()`, `fraction_to_rounded()` and where they are called in `check_snapshot()` |
+    | add/remove an indicator (changes the total number of years) | `INDICATORS` | `SPEC` and `SPEC_TOTAL_ROWS_ALL_12` |
 
-    Neu chi sua mot ben thi `verify_data.py` se **FAIL** va chi dung ra chenh
-    lech -- do la hanh vi dung, khong phai loi. Sua ben con lai roi chay lai.
+    If only one side is edited, `verify_data.py` will **FAIL** and point to the
+    difference -- that is the correct behaviour, not a bug. Edit the other side and rerun.
 
 ---
 
-## 6. Hai van de ve CHAT LUONG du lieu (can bao nhom, khong phai loi script)
+## 6. Two data QUALITY issues (to report to the team; not script bugs)
 
-### 6.1 `net_forest_depletion` gan nhu vo dung de so sanh
-- **5 tren 8 nuoc bang dung 0,00 moi nam**: Viet Nam, Indonesia, Thailand,
-  Philippines, Cambodia. Chi Malaysia, Laos, Myanmar co so khac 0.
-- Vi vay **median = 0 ca 32 nam**.
-- Phan bo verdict: **0 "better", 155 "level", 96 "worse"**. Khong nuoc nao co the
-  "better" duoc, vi `direction` la `lower` va moi gia tri deu `>= 0`, nen khong
-  ai thap hon median 0 duoc. Dung voi **moi** nguong da thu.
-- **Viet Nam se la "ngang median", `gap = 0`, moi nam.** Bieu do duong la mot
-  duong thang det o 0. **RQ3 (chenh lech voi median doi the nao) bang 0 mai mai
-  voi chi so nay.**
-- Chua phai loi: so lieu dung nhu World Bank cong bo, va "Viet Nam khong co suy
-  giam rung rong" la mot ket luan tot.
-- **Nhom da chot (2026-10-08): GIU chi so va GIU verdict**, kem **mot dong chu
-  thich rieng** tren giao dien cho chi so nay. Noi dung de xuat o
-  `data/README.md`, muc "net_forest_depletion can mot dong chu thich rieng".
-  Phuong thiet ke dong chu thich do; Que va Hoang Quan khong can xu ly rieng
-  trong JS ngoai viec doc `repShare` nhu moi chi so khac.
+### 6.1 `net_forest_depletion` is almost useless for comparison
+- **5 of 8 countries are exactly 0.00 every year**: Viet Nam, Indonesia, Thailand,
+  Philippines, Cambodia. Only Malaysia, Laos and Myanmar have non-zero values.
+- So **the median = 0 in all 32 years**.
+- Verdict distribution: **0 "better", 155 "level", 96 "worse"**. No country can be
+  "better", because `direction` is `lower` and every value is `>= 0`, so nobody
+  can be below a median of 0. True for **every** threshold tried.
+- **Viet Nam is "level with the median", `gap = 0`, every year.** Its line chart is a
+  flat line at 0. **RQ3 (how the gap with the median changes) is always 0
+  for this indicator.**
+- Not a bug: the figures are exactly as the World Bank publishes them, and "Viet Nam has no net
+  forest depletion" is a positive finding.
+- **Team decision (2026-10-08): KEEP the indicator and KEEP the verdict**, with **one dedicated
+  note** on the interface for this indicator. Suggested wording is in
+  `data/README.md`, section "net_forest_depletion needs its own note".
+  The UI/UX lead designs that note; the frontend leads need no special handling
+  in JS beyond reading `repShare` like any other indicator.
 
-### 6.2 `protected_areas` co 85% dong bi danh `rep`
-75 tren 88 dong co so bi `rep = true`: gia tri gan nhu khong doi 2013-2023.
-Neu trang hien mot nhan canh bao "so lap / chua cap nhat" thi 85% o se co nhan
--> nhan tro thanh nhieu. Ty le `rep` tung chi so:
+### 6.2 `protected_areas` has 85% of its rows flagged `rep`
+75 of 88 rows with a value have `rep = true`: the value barely changes from 2013 to 2023.
+If the page showed a "repeated / not updated" warning label, 85% of cells would have the label
+-> the label becomes noise. `rep` share by indicator:
 
-| chi so | ty le `rep` |
+| indicator | `rep` share |
 |---|---|
 | protected_areas | 85.2% |
 | net_forest_depletion | 61.8% |
@@ -533,12 +534,12 @@ Neu trang hien mot nhan canh bao "so lap / chua cap nhat" thi 85% o se co nhan
 | coal_electricity | 14.1% |
 | resource_depletion | 8.8% |
 | renewable_electricity | 2.2% |
-| 6 chi so con lai | 0% |
+| the other 6 indicators | 0% |
 
-### 6.3 Cot `direction` va `level` -- DA CHOT
-Da duyet sau khi xem phan bo (muc 4c). So "level" thuc te **sau khi doi nguong**:
+### 6.3 The `direction` and `level` columns -- DECIDED
+Approved after looking at the distribution (section 4c). Actual "level" counts **after the threshold change**:
 
-| chi so | mode, tol | "level" / tong | % |
+| indicator | mode, tol | "level" / total | % |
 |---|---|---|---|
 | forest_area | abs 3 | 89 / 264 | 33.7% |
 | protected_areas | abs 3 | 28 / 88 | 31.8% |
@@ -551,16 +552,16 @@ Da duyet sau khi xem phan bo (muc 4c). So "level" thuc te **sau khi doi nguong**
 | renewable_electricity | abs 3 | 22 / 229 | 9.6% |
 | **net_forest_depletion** | **abs 1.0** | **155 / 251** | **61.8%** |
 
-`tree_cover_loss` va `energy_use_per_person` khong co trong bang: `direction`
-la `none` nen khong co verdict.
+`tree_cover_loss` and `energy_use_per_person` are not in the table: their `direction`
+is `none`, so they have no verdict.
 
 ---
 
-## 7. So da kiem bang tay, de doi chieu
+## 7. Numbers checked by hand, for cross-checking
 
-`forest_area` nam **2022**, lay thang tu CSV:
+`forest_area` in **2022**, taken straight from the CSV:
 
-| nuoc | `OBS_VALUE` goc trong CSV | `v` (decimals 1) | hang | gap | verdict |
+| country | raw `OBS_VALUE` in the CSV | `v` (decimals 1) | rank | gap | verdict |
 |---|---|---|---|---|---|
 | LAO | 71.6052859618717 | 71.6 | 1 | 26.0 | better |
 | MYS | 57.871678587734 | 57.9 | 2 | 12.3 | better |
@@ -571,31 +572,15 @@ la `none` nen khong co verdict.
 | THA | 38.7578539411615 | 38.8 | 7 | -6.8 | worse |
 | PHL | 24.3430593285709 | 24.3 | 8 | -21.3 | worse |
 
-`n = 8`, **median = 45.6** (= lam tron len cua `(43.9 + 47.2)/2 = 45.55`, trong
-do 43.9 va 47.2 la `v` **da lam tron** -- theo quy uoc lam tron cua nhom).
+`n = 8`, **median = 45.6** (= `(43.9 + 47.2)/2 = 45.55` rounded up, where
+43.9 and 47.2 are the **rounded** `v` values -- following the team's rounding convention).
 `latestYear = 2022`.
 
 Viet Nam: **1990 = 28.8** (CSV 28.8056775937817), **2022 = 47.2**
--> **+18.4 diem**. Trung khop voi con so `+18.4` trong proposal.
+-> **+18.4 points**. Matches the `+18.4` figure in the proposal.
 
-Lenh de tu doi chieu lai voi CSV:
+Command to cross-check against the CSV yourself:
 
 ```fish
 grep 'WB_ESG_AG_LND_FRST_ZS' ../WB_ESG.csv | grep ',VNM,' | awk -F',' '$24==2022'
 ```
-
----
-
-## 8. Trang thai cac task
-
-| Task | Noi dung | Trang thai |
-|---|---|---|
-| 1 | Hieu CSV, map ten nuoc, bang khoang nam that | **xong** (`scripts/inspect_csv.py`) |
-| 2 | forest_area chay tron duong, 264 dong | **xong**, da kiem bang tay |
-| 3 | values.json du 12 chi so, 2776 dong | **xong**, dung 2.776 dong, da trong `data/` |
-| 4 | snapshot.json + coverage.json du 12 chi so | **xong**, da trong `data/` |
-| 5 | `scripts/verify_data.py` kiem tra doc lap | **xong**, PASS 12.260 phep kiem, da chung minh bat duoc 17 loi tiem vao |
-| 6 | So lieu dan xuat cho phan mo dau | chua chot moc 1990 vs 2010 |
-
-`data/` hien chua **du 12 chi so, dung 2.776 dong**. Task 6 chua lam vi con cho
-chot moc so sanh 1990 hay 2010.

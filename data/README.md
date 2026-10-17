@@ -1,42 +1,42 @@
 # Data folder
 
-Ba file JSON tinh, sinh tu CSV World Bank ESG bang `scripts/build_data.py`
-(phu trach: Le Quan). **Trinh duyet chi doc, loc va sap xep.**
-Trinh duyet **khong** tinh median, hang, nhan, va **khong lam tron lai**.
-Moi con so can hien thi da co san trong JSON, dung do thang.
+Three static JSON files, generated from the World Bank ESG CSV by `scripts/build_data.py`
+(owner: Le Quan). **The browser only reads, filters and sorts.**
+The browser does **not** compute medians, ranks or verdicts, and does **not re-round**.
+Every number to display is already in the JSON, ready to use.
 
-Giai thich chi tiet tung quy tac: [`../docs/data-notes.md`](../docs/data-notes.md).
+Detailed explanation of each rule: [`../docs/data-notes.md`](../docs/data-notes.md).
 
-Quy uoc: thieu nam hoac thieu nuoc luu la `null`, **khong bao gio la 0**, de
-trang hien "no data".
+Convention: a missing year or missing country is stored as `null`, **never 0**, so
+the page can show "no data".
 
 ---
 
-## 4 quy tac nhom da chot (doc truoc khi viet JS)
+## 4 team rules (read before writing JS)
 
-1. **Nam co `n < 3`:** nuoc **van co muc** trong `countries` nhung `rank`,
-   `verdict`, `gap` **deu `null`**. `median` va `n` **van duoc ghi**.
+1. **Years with `n < 3`:** the country **still has an entry** in `countries`, but `rank`,
+   `verdict` and `gap` are **all `null`**. `median` and `n` **are still written**.
 2. **`direction: "none"`** (`tree_cover_loss`, `energy_use_per_person`):
-   `rank` va `verdict` **luon `null`**, `gap` va `median` **van co**.
-3. **Frontend chi ve duong median khi `n >= 3`** -- xet theo **`n`**,
-   **khong** xet theo `rank`.
-4. **`meta.accessed` duoc footer trang doc truc tiep tu JSON, khong go tay.**
+   `rank` and `verdict` are **always `null`**; `gap` and `median` **are still present**.
+3. **The frontend draws the median line only when `n >= 3`** -- decided by **`n`**,
+   **not** by `rank`.
+4. **The page footer reads `meta.accessed` directly from the JSON; it is never typed by hand.**
 
-Mot truong hop ca quy tac 1 va 2 cung ap: chi so `direction: "none"` o nam co
-`n < 3`. Luc do **quy tac 1 thang**, tuc `gap` cung la `null`, vi median khi
-`n < 3` khong co y nghia so sanh nen hieu so voi no cung vay.
-Thuc te khong xay ra: `tree_cover_loss` va `energy_use_per_person` khong co nam
-nao `n < 3`.
+One case where rules 1 and 2 both apply: a `direction: "none"` indicator in a year with
+`n < 3`. Then **rule 1 wins**, i.e. `gap` is also `null`, because when
+`n < 3` the median has no comparative meaning, and neither does the difference from it.
+This does not happen in practice: `tree_cover_loss` and `energy_use_per_person` have no year
+with `n < 3`.
 
 ---
 
-## Bang 12 chi so
+## The 12 indicators
 
-Day la **bang chuan**. `scripts/indicators.py` go bang nay de sinh JSON, va
-`scripts/verify_data.py` go LAI bang nay bang tay de kiem tra doc lap. Doi mot
-con so o day thi phai doi **ca hai** file do.
+This is the **reference table**. `scripts/indicators.py` types this table to generate the JSON, and
+`scripts/verify_data.py` RETYPES it by hand for an independent check. Changing a
+number here means changing it in **both** files.
 
-| id | code World Bank | nhom | don vi | direction | level | decimals | nam | repShare |
+| id | World Bank code | group | unit | direction | level | decimals | years | repShare |
 |---|---|---|---|---|---|---|---|---|
 | `forest_area` | AG.LND.FRST.ZS | resource | % of land area | higher | abs 3 | 1 | 1990-2022 | 0.0 |
 | `tree_cover_loss` | AG.LND.FRLS.HA | resource | hectares | **none** | — | 0 | 2002-2021 | 0.0 |
@@ -51,43 +51,43 @@ con so o day thi phai doi **ca hai** file do.
 | `fossil_fuel` | EG.USE.COMM.FO.ZS | energy | % of total energy | lower | abs 3 | 1 | 1990-2022 | 0.0 |
 | `coal_electricity` | EG.ELC.COAL.ZS | energy | % of electricity | lower | abs 3 | 1 | 1990-2022 | 0.141 |
 
-- **`abs N`**: "ngang median" khi `|gap| <= N`, N tinh bang **don vi cua chi so**
-  (diem phan tram, % of GNI, MJ...).
-- **`rel R`**: "ngang median" khi `|gap| <= R * |median|`, R la **ty le**.
-- Khoang nam lay theo proposal. 4 chi so co du lieu som hon trong CSV
-  (`resource_depletion` va `net_forest_depletion` tu 1970, `freshwater_withdrawals`
-  tu 1980, `energy_use_per_person` tu 1971) **da bi cat**; ly do o
-  `../docs/data-notes.md` muc 2.
-- `protected_areas` la chi so **duy nhat** co nam 2023. Thanh truot nam phai lay
-  khoang tu `indicators[].years` **cua tung chi so**, khong dung mot khoang
-  chung.
+- **`abs N`**: "level with the median" when `|gap| <= N`, with N in **the indicator's unit**
+  (percentage points, % of GNI, MJ...).
+- **`rel R`**: "level with the median" when `|gap| <= R * |median|`, with R a **ratio**.
+- Year ranges follow the proposal. 4 indicators have earlier data in the CSV
+  (`resource_depletion` and `net_forest_depletion` from 1970, `freshwater_withdrawals`
+  from 1980, `energy_use_per_person` from 1971) and **have been cut**; reasons in
+  `../docs/data-notes.md` section 2.
+- `protected_areas` is the **only** indicator with a 2023 value. The year slider must take
+  its range from `indicators[].years` **of each indicator**, not from one shared
+  range.
 
 ---
 
-## Dinh dang file
+## File format
 
-**`values.json` moi o mot dong de diff review duoc bang mat.** Phan dau
-(`meta`, `countries`, `indicators`) dung `indent=1`; mang `rows` thi mo va dong
-tren dong rieng, va **moi phan tu `{c,i,y,v,rep}` chiem dung mot dong**.
-`snapshot.json` va `coverage.json` dung `indent=1`.
+**`values.json` has one cell per line so diffs can be reviewed by eye.** The header
+(`meta`, `countries`, `indicators`) uses `indent=1`; the `rows` array opens and closes
+on its own lines, and **each `{c,i,y,v,rep}` item takes exactly one line**.
+`snapshot.json` and `coverage.json` use `indent=1`.
 
-Vi sao khong nen het thanh mot dong: `git diff` se chi hien "1 dong doi" va
-khong ai review duoc du lieu. Vi sao `rows` khong dung `indent`: 2.776 phan tu
-x 7 dong = hon 19.000 dong, cung khong doc duoc.
+Why not minify to a single line: `git diff` would only show "1 line changed" and
+nobody could review the data. Why `rows` does not use `indent`: 2,776 items
+x 7 lines = over 19,000 lines, also unreadable.
 
-Thu tu khoa va thu tu dong **co dinh** (`meta`, `countries`, `indicators`,
-`rows`; trong moi o la `c`, `i`, `y`, `v`, `rep`), nen mot lan sinh lai voi
-cung du lieu cho ra file **giong het tung byte**. Moi file ket thuc bang mot
+Key order and row order are **fixed** (`meta`, `countries`, `indicators`,
+`rows`; inside each cell `c`, `i`, `y`, `v`, `rep`), so regenerating with
+the same data produces a **byte-identical** file. Every file ends with a
 newline.
 
 ---
 
 ## Schema v0
 
-Chi Le Quan duoc sua schema den khi du lieu mau forest_area co tren repo.
-Sau do moi thay doi phai bao ca nhom.
+Only Le Quan could change the schema until the forest_area sample data was on the repo.
+After that, every change must be announced to the whole team.
 
-### `values.json` -- gia tri tho
+### `values.json` -- raw values
 
 ```json
 {
@@ -119,23 +119,23 @@ Sau do moi thay doi phai bao ca nhom.
 }
 ```
 
-| truong | y nghia |
+| field | meaning |
 |---|---|
-| `countries` | **thu tu trong mang nay la thu tu nhom muon hien thi**, Viet Nam dau tien |
-| `indicators[].group` | `"resource"` hoac `"energy"`, dung de chia 2 nhom tren bo dieu khien |
-| `indicators[].direction` | `"higher"` cang cao cang tot, `"lower"` cang thap cang tot, `"none"` khong xep hang duoc |
-| `indicators[].verdict` | quy tac tinh nhan; `null` khi `direction` la `"none"` |
-| `indicators[].decimals` | so chu so thap phan **da duoc lam tron san**, dung de dinh dang nhan truc |
-| `indicators[].years` | `[nam dau, nam cuoi]`, dung de dung thanh truot nam **cua rieng chi so nay** |
-| `indicators[].repShare` | ty le o bi danh `rep` tren tong o co so, 3 chu so thap phan. Quyet dinh cach hien co `rep` -- xem quy tac duoi |
-| `rows[].v` | gia tri da lam tron, hoac `null` neu thieu du lieu. **`decimals: 0` thi la so nguyen** |
-| `rows[].rep` | `true` khi gia tri nay nam trong chuoi >= 3 nam lien tiep khong doi (World Bank chua cap nhat) |
+| `countries` | **the order of this array is the team's display order**, Viet Nam first |
+| `indicators[].group` | `"resource"` or `"energy"`, used to split the controls into 2 groups |
+| `indicators[].direction` | `"higher"` higher is better, `"lower"` lower is better, `"none"` cannot be ranked |
+| `indicators[].verdict` | rule for computing the verdict; `null` when `direction` is `"none"` |
+| `indicators[].decimals` | number of decimal places **already rounded**, used to format axis labels |
+| `indicators[].years` | `[first year, last year]`, used to build the year slider **for this indicator only** |
+| `indicators[].repShare` | share of `rep`-flagged cells among cells with a value, 3 decimal places. Decides how `rep` is shown -- see the rule below |
+| `rows[].v` | rounded value, or `null` if data is missing. **An integer when `decimals: 0`** |
+| `rows[].rep` | `true` when this value is part of a run of >= 3 consecutive unchanged years (not updated by the World Bank) |
 
-**Moi** to hop nuoc x chi so x nam trong `years` deu co **mot** dong trong
-`rows`. Thieu du lieu thi dong van ton tai voi `v: null`. Nen khong can kiem
-"co dong khong", chi can kiem `v !== null`.
+**Every** country x indicator x year combination within `years` has **one** row in
+`rows`. Missing data still has a row with `v: null`. So there is no need to check
+"does the row exist", only `v !== null`.
 
-### `snapshot.json` -- so da tinh san, theo chi so roi theo nam
+### `snapshot.json` -- precomputed numbers, by indicator then by year
 
 ```json
 {
@@ -155,27 +155,27 @@ Sau do moi thay doi phai bao ca nhom.
 }
 ```
 
-| truong | y nghia |
+| field | meaning |
 |---|---|
-| `latestYear` | nam mo mac dinh khi chon chi so nay: nam **moi nhat** co it nhat **6/8** nuoc co so |
-| `years` | **co DU MOI NAM** trong khoang cua chi so, khong chi `latestYear`. Bieu do duong lay `median` tung nam tu day de ve duong net dut |
-| `median` | median cua **moi nuoc co so trong nam do**, ke ca nuoc dang xem. Tinh tu cac `v` **da lam tron**, roi lam tron half-up lan nua -- xem quy uoc lam tron o duoi. `null` khi `n = 0` |
-| `n` | so nuoc co so trong nam do, co the nho hon 8 |
-| `countries` | **chi chua nuoc CO SO.** Nuoc thieu so **khong co muc** -- dung `if (!entry)` |
-| `rank` | 1 = tot nhat theo `direction`, tinh tu cac `v` **da lam tron** (nen hai gia tri tho khac nhau ma lam tron ra bang nhau thi **cung hang**). Hoa thi cung hang kieu `1, 2, 2, 4`. `null` khi `direction: "none"` hoac `n < 3` |
-| `verdict` | `"better"` / `"worse"` / `"level"`. `null` khi `direction: "none"` hoac `n < 3` |
-| `gap` | `v - median`, da lam tron theo `decimals`. **Van co khi `direction: "none"`.** `null` chi khi `n < 3` |
+| `latestYear` | default year when this indicator is selected: the **most recent** year with at least **6/8** countries reporting |
+| `years` | **contains EVERY YEAR** in the indicator's range, not only `latestYear`. The line chart takes the `median` for each year from here to draw the dashed line |
+| `median` | median of **all countries reporting that year**, including the country being viewed. Computed from the **rounded** `v` values, then rounded half-up again -- see the rounding convention below. `null` when `n = 0` |
+| `n` | number of countries reporting that year; can be less than 8 |
+| `countries` | **contains only countries WITH A VALUE.** A country with no value **has no entry** -- use `if (!entry)` |
+| `rank` | 1 = best for the `direction`, computed from the **rounded** `v` values (so two different raw values that round to the same number **share a rank**). Ties share a rank as `1, 2, 2, 4`. `null` when `direction: "none"` or `n < 3` |
+| `verdict` | `"better"` / `"worse"` / `"level"`. `null` when `direction: "none"` or `n < 3` |
+| `gap` | `v - median`, rounded to `decimals`. **Still present when `direction: "none"`.** `null` only when `n < 3` |
 
-**Hai truong hop `null` khac nhau, dung lan:**
-- Nuoc **khong co muc** trong `countries` -> khong co so -> hien "no data".
-- Nuoc **co muc** nhung `rank`/`verdict`/`gap` deu `null` -> co so nhung trong
-  nam do **chi co duoi 3 nuoc** co so (`n < 3`), khong du de so sanh -> hien gia
-  tri nhung **khong** hien nhan so sanh va khong hien hang.
-- Chi so `direction: "none"` -> `rank` va `verdict` luon `null` **nhung `gap`
-  van co**. Day **khong** phai truong hop thieu du lieu: van hien gia tri va
-  van hien `gap`, chi khong hien hang va khong hien nhan better/worse/level.
+**Different `null` cases; do not confuse them:**
+- The country **has no entry** in `countries` -> no value -> show "no data".
+- The country **has an entry** but `rank`/`verdict`/`gap` are all `null` -> it has a value but that
+  year has **fewer than 3 countries** reporting (`n < 3`), not enough to compare -> show the
+  value but **do not** show a comparison label or a rank.
+- A `direction: "none"` indicator -> `rank` and `verdict` are always `null` **but `gap`
+  is still present**. This is **not** a missing-data case: still show the value and
+  still show `gap`; just do not show a rank or a better/worse/level label.
 
-### `coverage.json` -- khoang nam cua tung nuoc
+### `coverage.json` -- year range of each country
 
 ```json
 {
@@ -185,76 +185,76 @@ Sau do moi thay doi phai bao ca nhom.
 }
 ```
 
-Luon co **du 8 nuoc**. Nuoc khong co so nao thi `first` va `last` la `null`,
-`count` la `0`. Dung de ve dai bang phu song du lieu, hoac de bao "Laos chi co
-10 nam o chi so nay".
+Always has **all 8 countries**. A country with no values has `first` and `last` as `null`
+and `count` as `0`. Used to draw a data-coverage strip, or to say "Laos only has
+10 years for this indicator".
 
 ---
 
-## Luu y cho phan frontend
+## Notes for the frontend
 
-- **Quy uoc lam tron (nhom chot 2026-10-08):** gia tri `v` lam tron **mot lan**
-  tu du lieu tho (half-up). `median`, `gap` va `rank` tinh tu cac **`v` da lam
-  tron**; `median` duoc lam tron half-up **lan nua** theo `decimals` cua chi so.
-  **He qua:** `median` co the lech **toi da 1 don vi cuoi** so voi median cua
-  gia tri tho.
-  Vi du `coal_electricity` 2022: median cua gia tri **tho** la
-  `(32.2871640669047 + 40.1977454271822) / 2 = 36.242...` -> **36.2**; con
-  pipeline tinh tu `v` da lam tron `(32.3 + 40.2) / 2 = 36.25` -> **36.3**.
-  JSON ghi **36.3**.
-  Ly do giu quy uoc nay: nguoi xem **tu tinh lai duoc** median tu cac so hien
-  tren bieu do.
-- Dung `toFixed(decimals)` chi de **dinh dang hien thi** (giu so 0 cuoi nhu
-  `20.0`), **khong** lam tron lai gia tri.
-- **Duong median net dut: chi ve diem cua nam co `n >= 3`.** Xet theo `n`,
-  **khong** xet theo `rank` (vi `rank` con `null` o chi so `direction: "none"`
-  du nam do co du 8 nuoc). Nam co `n < 3` thi bo diem do, de duong median dut
-  doan thay vi noi qua mot diem khong dang tin.
-- `direction: "none"` co o `tree_cover_loss` va `energy_use_per_person`:
-  `rank` va `verdict` luon `null`, **khong** ve hang va **khong** ve nhan so
-  sanh. Nhung **`median` va `gap` van co**, van ve duoc duong net dut
-  (van theo dieu kien `n >= 3` o tren).
-- `gap` co the la so **am**; dau cua `gap` khong noi len tot hay xau,
-  phai doc cung `direction`. **Luon doc `verdict` co san**, dung tu suy ra tu
-  dau cua `gap`.
-- **`meta.accessed` phai duoc footer doc TRUC TIEP tu JSON**, dung go ngay vao
-  HTML. Script la noi duy nhat dat ngay nay (hang so `ACCESSED_DATE` trong
-  `scripts/indicators.py`), nen sua mot cho la ca trang doi theo.
+- **Rounding convention (team decision 2026-10-08):** `v` is rounded **once**
+  from the raw data (half-up). `median`, `gap` and `rank` are computed from the **rounded
+  `v`**; `median` is rounded half-up **again** to the indicator's `decimals`.
+  **Consequence:** `median` can differ by **at most 1 unit in the last digit** from the median of the
+  raw values.
+  Example `coal_electricity` 2022: the median of the **raw** values is
+  `(32.2871640669047 + 40.1977454271822) / 2 = 36.242...` -> **36.2**; the
+  pipeline computes from rounded `v` `(32.3 + 40.2) / 2 = 36.25` -> **36.3**.
+  The JSON says **36.3**.
+  Reason for this convention: viewers **can recompute** the median from the numbers shown
+  on the chart.
+- Use `toFixed(decimals)` only to **format the display** (keeping trailing zeros as in
+  `20.0`); it does **not** re-round the value.
+- **Dashed median line: only draw points for years with `n >= 3`.** Decide by `n`,
+  **not** by `rank` (because `rank` is still `null` for `direction: "none"` indicators
+  even when all 8 countries report). Skip years with `n < 3`, so the median line breaks
+  instead of passing through an unreliable point.
+- `direction: "none"` applies to `tree_cover_loss` and `energy_use_per_person`:
+  `rank` and `verdict` are always `null`; do **not** draw ranks and do **not** draw comparison
+  labels. But **`median` and `gap` are still present**, so the dashed line can still be drawn
+  (still subject to the `n >= 3` condition above).
+- `gap` can be **negative**; the sign of `gap` does not say good or bad,
+  it must be read with `direction`. **Always read the precomputed `verdict`**; never infer it from
+  the sign of `gap`.
+- **The footer must read `meta.accessed` DIRECTLY from the JSON**; never type the date into
+  the HTML. The script is the only place that sets this date (the `ACCESSED_DATE` constant in
+  `scripts/indicators.py`), so changing one place updates the whole page.
 
-### Quy tac hien co `rep` -- dung `repShare`
+### How to show `rep` -- use `repShare`
 
-`rep = true` nghia la gia tri nay nam trong chuoi **>= 3 nam lien tiep khong
-doi**, tuc World Bank chua cap nhat so. Nhung o vai chi so dieu nay la **binh
-thuong**, khong phai bat thuong: `protected_areas` co **85.2%** o nhu vay.
-Neu lam nhat tung diem thi 85% diem bi lam nhat -> nhan tro thanh nhieu.
+`rep = true` means the value is part of a run of **>= 3 consecutive unchanged
+years**, i.e. the World Bank has not updated the number. But for some indicators this is
+**normal**, not unusual: `protected_areas` has **85.2%** of its cells like this.
+Fading every such point would fade 85% of the points -> the fading becomes noise.
 
-Vi vay doc `repShare` cua chi so roi chon mot trong hai cach:
+So read the indicator's `repShare` and choose one of two ways:
 
-| dieu kien | cach hien |
+| condition | how to show it |
 |---|---|
-| `repShare <= 0.3` | **lam nhat tung diem** co `rep = true` |
-| `repShare > 0.3` | **khong lam nhat diem nao**; thay vao do hien **mot dong chu thich chung** duoi bieu do, neu ro ti le diem lap |
+| `repShare <= 0.3` | **fade each point** with `rep = true` |
+| `repShare > 0.3` | **fade no points**; instead show **one general note** below the chart stating the share of repeated points |
 
-Hien tai 3 chi so vuot 0.3: `protected_areas` 0.852, `net_forest_depletion`
-0.618, `freshwater_withdrawals` 0.438. Chin chi so con lai deu `<= 0.141`.
+Currently 3 indicators exceed 0.3: `protected_areas` 0.852, `net_forest_depletion`
+0.618, `freshwater_withdrawals` 0.438. The other nine are all `<= 0.141`.
 
-### `net_forest_depletion` can mot dong chu thich rieng
+### `net_forest_depletion` needs its own note
 
-Chi so nay **duoc giu lai**, va **verdict cung duoc giu**, nhung no co dang dac
-biet ma giao dien phai noi ro, neu khong nguoi xem se hieu sai:
+This indicator **is kept**, and **its verdict is kept too**, but it has a special
+shape that the interface must state clearly, or viewers will misread it:
 
-- **5 tren 8 nuoc bang dung `0.00` moi nam**: Viet Nam, Indonesia, Thailand,
-  Philippines, Cambodia. Chi Malaysia, Laos, Myanmar co so khac 0.
-- Vi vay **`median` = 0 ca 32 nam**.
-- **Khong nuoc nao co the la `"better"`**: `direction` la `lower` va moi gia tri
-  deu `>= 0`, nen khong ai thap hon 0 duoc. Phan bo thuc te:
+- **5 of 8 countries are exactly `0.00` every year**: Viet Nam, Indonesia, Thailand,
+  Philippines, Cambodia. Only Malaysia, Laos and Myanmar have non-zero values.
+- So **`median` = 0 in all 32 years**.
+- **No country can be `"better"`**: `direction` is `lower` and every value
+  is `>= 0`, so nobody can be below 0. Actual distribution:
   **0 `better`, 155 `level`, 96 `worse`**.
-- **Viet Nam luon la `"level"` voi `gap = 0`, moi nam.** Bieu do duong la mot
-  duong thang det o 0, va chenh lech voi median bang 0 mai mai.
+- **Viet Nam is always `"level"` with `gap = 0`, every year.** Its line chart is a
+  flat line at 0, and its difference from the median is always 0.
 
-De xuat giao dien: hien mot dong chu thich rieng cho chi so nay, dai y
-*"World Bank ghi nhan suy giam rung rong bang 0 o Viet Nam va 4 nuoc khac trong
-toan bo giai doan, nen khong co nuoc nao duoi muc median"*. Day **khong** phai
-loi du lieu va **khong** phai loi script: do la so lieu World Bank cong bo, va
-"Viet Nam khong co suy giam rung rong" la mot ket luan tot.
-- File CSV goc **khong** nam trong repo (185 MB, vuot gioi han GitHub).
+Interface suggestion: show a dedicated note for this indicator, along the lines of
+*"The World Bank records zero net forest depletion for Viet Nam and 4 other countries over
+the whole period, so no country is below the median"*. This is **not** a data error and **not**
+a script error: these are the figures the World Bank publishes, and
+"Viet Nam has no net forest depletion" is a positive finding.
+- The raw CSV file is **not** in the repo (185 MB, over the GitHub limit).
