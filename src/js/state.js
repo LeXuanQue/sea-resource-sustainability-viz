@@ -22,9 +22,11 @@ function getDefaultYear(indicatorId) {
 /**
  * Call once after loadData(). Builds indById / countryByCode, then sets the
  * first indicator, its default year, and VNM.
+ * Does nothing if data is null (loadData() failed).
  * Does not trigger listeners; call your render function once afterwards.
  */
 function initState(data) {
+    if (!data) return; // loadData() failed and already showed the error on the page
     _data = data;
     data.values.indicators.forEach(ind => { indById[ind.id] = ind; });
     data.values.countries.forEach(c => { countryByCode[c.code] = c; });
@@ -45,10 +47,12 @@ function subscribe(fn) {
  * (which redraw both charts).
  * - Changing indicator (without an explicit year) resets year to that indicator's default.
  * - Year is clamped to indicators[].years of the new indicator.
+ * - An invalid year (undefined, null, NaN) is ignored; the old year is kept.
  * - Unknown indicator or country codes throw (fail loudly, not silently).
  * @param {{indicator?: string, year?: number, country?: string}} patch
  */
 function setState(patch) {
+    if (!_data) return; // initState() has not run (or data failed to load)
     const next = { ...state, ...patch };
 
     const ind = indById[next.indicator];
@@ -62,8 +66,15 @@ function setState(patch) {
     if (next.indicator !== state.indicator && !("year" in patch)) {
         next.year = getDefaultYear(next.indicator);
     }
+    // A missing or non-numeric year (undefined, null, "", "abc") must not become NaN:
+    // Math.min/Math.max would pass NaN through. Keep the old year instead
+    // (or the default year if the indicator just changed).
+    let year = Number(next.year);
+    if (next.year == null || next.year === "" || !Number.isFinite(year)) {
+        year = next.indicator !== state.indicator ? getDefaultYear(next.indicator) : state.year;
+    }
     const [minY, maxY] = ind.years;
-    next.year = Math.min(maxY, Math.max(minY, Number(next.year)));
+    next.year = Math.min(maxY, Math.max(minY, year));
 
     if (next.indicator === state.indicator &&
         next.year === state.year &&
