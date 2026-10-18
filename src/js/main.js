@@ -1,4 +1,3 @@
-// Initial skeleton. Hoàng Quân owns interactions and layer transitions, Xuân Quế owns the main charts.
 // Wires data, state, controls and charts together.
 // The browser only filters and sorts here. Median, rank, verdict, gap and n
 // are read from snapshot.json, never recomputed.
@@ -163,11 +162,13 @@ function getLineData(s, ind) {
     }
 
     // repShare <= 0.3: fade repeated points; > 0.3: one general note instead.
-    // ASSUMPTION: location of repShare in coverage.json; check data/README.md.
-    const cov = appData.coverage[s.indicator] || {};
-    const repShare = cov.repShare ?? 0;
+    // repShare is a field of each indicator in values.json (indicators[].repShare).
+    const repShare = typeof ind.repShare === "number" ? ind.repShare : null;
+    if (repShare === null) {
+        console.warn(`getLineData: indicator '${ind.id}' has no repShare in values.json.`);
+    }
 
-    return { indicator: ind, country: s.country, series, median, fadeRep: repShare <= 0.3, repShare };
+    return { indicator: ind, country: s.country, series, median, fadeRep: repShare !== null && repShare <= 0.3, repShare };
 }
 
 function render(s) {
@@ -198,6 +199,3 @@ function render(s) {
 }
 
 main();
-
-// JSON data is exported into the data/ folder by Lê Quân (see data/README.md).
-// Example: fetch('../data/indicators.json').then(r => r.json()).then(init);
