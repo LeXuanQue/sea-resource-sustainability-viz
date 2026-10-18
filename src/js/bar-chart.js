@@ -16,8 +16,8 @@
 
 const BAR_WIDTH = 800;   // matches viewBox="0 0 800 420" in index.html
 const BAR_HEIGHT = 420;
-// left: country names. right: value column. top: median label. bottom: value axis.
-const BAR_MARGIN = { top: 30, right: 80, bottom: 40, left: 116 };
+// left: country names. right: value column. top: median label. bottom: value axis and its unit label.
+const BAR_MARGIN = { top: 30, right: 80, bottom: 60, left: 116 };
 
 const BAR_VN_CODE = "VNM";
 const BAR_MEDIAN_MIN_N = 3;     // no median line when fewer than 3 countries report
@@ -225,6 +225,13 @@ function drawBarChart(svgEl, data, options = {}) {
                 .ticks(5)
                 .tickFormat(x.tickFormat(5, ",~f"))
                 .tickSizeOuter(0));
+
+        // Unit and year under the axis, so the chart still says what it shows when copied on its own.
+        chart.append("text")
+            .attr("class", "bar-axis-title")
+            .attr("x", innerW / 2).attr("y", innerH + 44)
+            .attr("text-anchor", "middle")
+            .text(`${ind.unit}, ${data.year}`);
     }
 
     // Median: dashed line over the rows, only when 3 or more countries report.

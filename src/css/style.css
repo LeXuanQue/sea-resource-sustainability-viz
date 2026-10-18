@@ -334,6 +334,7 @@ svg.chart {
 .bar-chart .bar-label-selected { font-weight: 700; }
 .bar-chart .bar-value { font-variant-numeric: tabular-nums; }
 .bar-chart .bar-median-label { font-size: 14px; fill: var(--color-muted); }
+.bar-chart .bar-axis-title { font-size: 14px; fill: var(--color-muted); }
 .bar-chart .bar-baseline { stroke: var(--color-border); }
 
 .bar-chart .bar-row { cursor: pointer; }
