@@ -27,7 +27,7 @@
       </div>
 
       <div class="control control-year">
-        <label for="year-slider">Year <output id="year-value" for="year-slider"></output></label>
+        <label for="year-slider">Year <output id="year-label" for="year-slider"></output></label>
         <input id="year-slider" name="year" type="range" step="1">
         <div class="range-ends" aria-hidden="true">
           <span id="year-min"></span>
@@ -35,10 +35,11 @@
         </div>
       </div>
 
-      <fieldset class="control control-countries">
-        <legend>Countries</legend>
-        <div id="country-chips" class="chips"></div>
-      </fieldset>
+      <div class="control control-countries">
+        <label for="country-select">Country</label>
+        <select id="country-select" name="country"></select>
+        <button id="btn-back" class="chip hidden" type="button">← Back to Viet Nam</button>
+      </div>
     </section>
 
     <ul id="legend" class="legend" aria-label="Color legend">
@@ -49,13 +50,19 @@
       <li><span class="swatch swatch-nodata"></span>No data</li>
     </ul>
 
+    <!-- Shared heading for both charts. main.js fills #chart-title and #chart-note. -->
+    <header class="panel-header chart-heading">
+      <h2 id="chart-title"></h2>
+      <p id="chart-note" class="panel-subtitle" aria-live="polite"></p>
+    </header>
+
     <div class="charts">
       <section class="panel" aria-labelledby="chart-region-title">
         <header class="panel-header">
           <h2 id="chart-region-title">The region in one year</h2>
           <p id="chart-region-subtitle" class="panel-subtitle"></p>
         </header>
-        <div id="chart-region" class="chart" role="img" aria-labelledby="chart-region-title"></div>
+        <svg id="chart-region" class="chart" viewBox="0 0 800 420" role="group" aria-labelledby="chart-region-title"></svg>
         <p id="chart-region-note" class="chart-note"></p>
       </section>
 
@@ -64,13 +71,13 @@
           <h2 id="chart-trend-title">Trend over time</h2>
           <p id="chart-trend-subtitle" class="panel-subtitle"></p>
         </header>
-        <div id="chart-trend" class="chart" role="img" aria-labelledby="chart-trend-title"></div>
+        <svg id="chart-trend" class="chart" viewBox="0 0 800 420" role="img" aria-labelledby="chart-trend-title"></svg>
         <p id="chart-trend-note" class="chart-note"></p>
       </section>
     </div>
   </main>
 
-  <footer class="site-footer">
+  <footer id="source-note" class="site-footer">
     <p>
       Data source: <a href="https://databank.worldbank.org/source/environment-social-and-governance-(esg)-data" rel="noopener">World Bank Sovereign ESG Data</a><span id="data-accessed-wrap" hidden>, accessed <time id="data-accessed"></time></span>.
       <!-- #data-accessed is filled from meta.accessed in data/values.json, never typed by hand. -->
@@ -78,8 +85,15 @@
     <p>A missing year or country is shown as "no data", never as zero.</p>
   </footer>
 
-  <!-- Script order matters: D3 first, then project scripts. -->
+  <!-- Hover tooltip, positioned by showTooltip() in chart-utils.js. -->
+  <div id="tooltip" class="hidden" role="tooltip"></div>
+
+  <!-- Script order matters: D3 first, then project scripts, main.js last. -->
   <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+  <script src="js/chart-utils.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/bar-chart.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>

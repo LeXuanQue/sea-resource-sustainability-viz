@@ -119,7 +119,7 @@ h1 {
   color: var(--color-muted);
 }
 
-#year-value {
+#year-label {
   margin-left: 6px;
   font-weight: 700;
   color: var(--color-text);
@@ -303,6 +303,79 @@ h1 {
 .chart .axis line,
 .chart .axis path {
   stroke: var(--color-border);
+}
+
+/* ---------- Utilities ---------- */
+.hidden { display: none; }
+
+/* ---------- Chart heading and country control ---------- */
+.chart-heading { margin-top: var(--gap); }
+.control-countries .chip { margin-top: 8px; }
+
+/* ---------- SVG charts ---------- */
+/* #chart-region and #chart-trend are <svg class="chart" viewBox="0 0 800 420">:
+   height follows the viewBox ratio instead of the .chart min-height. */
+svg.chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+}
+
+/* ---------- Bar chart (src/js/bar-chart.js) ---------- */
+.bar-chart text {
+  font-family: var(--font-body);
+  font-size: 16px;
+  fill: var(--color-text);
+}
+.bar-chart .axis text { font-size: 14px; fill: var(--color-muted); }
+.bar-chart .bar-label-vn { fill: var(--color-vn); }
+.bar-chart .bar-label-selected { font-weight: 700; }
+.bar-chart .bar-value { font-variant-numeric: tabular-nums; }
+.bar-chart .bar-median-label { font-size: 14px; fill: var(--color-muted); }
+.bar-chart .bar-baseline { stroke: var(--color-border); }
+
+.bar-chart .bar-row { cursor: pointer; }
+.bar-chart .bar-row:focus { outline: none; }
+.bar-chart .bar-row:focus-visible .bar-hit {
+  stroke: var(--color-selected);
+  stroke-width: 2px;
+}
+
+.bar-chart .bar-nodata {
+  stroke: var(--color-muted);
+  stroke-opacity: 0.5;
+}
+.bar-chart .bar-nodata-text {
+  font-size: 14px;
+  fill: var(--color-muted);
+  /* halo so the median line does not cut through the words */
+  paint-order: stroke;
+  stroke: var(--color-surface);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+
+/* Selected country: dark outline, so Viet Nam keeps its own color when it is selected */
+.bar-chart .bar-selected {
+  stroke: var(--color-text);
+  stroke-opacity: 1;
+  stroke-width: 2.5px;
+}
+
+/* ---------- Tooltip (positioned by showTooltip() in chart-utils.js) ---------- */
+#tooltip {
+  position: absolute;
+  z-index: 10;
+  max-width: 240px;
+  padding: 8px 10px;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: #ffffff;
+  background: rgba(26, 26, 26, 0.94);
+  border-radius: 6px;
+  pointer-events: none;
 }
 
 /* ---------- Footer: data source ---------- */
