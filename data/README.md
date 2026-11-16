@@ -236,8 +236,8 @@ So read the indicator's `repShare` and choose one of two ways:
 
 | condition | how to show it |
 |---|---|
-| `repShare <= 0.3` | **fade each point** with `rep = true` |
-| `repShare > 0.3` | **fade no points**; instead show **one general note** below the chart stating the share of repeated points |
+| `repShare <= 0.5` | **fade each point** with `rep = true` |
+| `repShare > 0.5` | **fade no points**; instead show **one general note** below the chart stating the share of repeated points |
 
 Runs of **exact zeros are not `rep`** (team decision 2026-11-16): 0 is a real
 value (e.g. no net forest depletion, no coal power), not an old estimate carried
@@ -245,9 +245,12 @@ forward. Before this change, all-zero series pushed `net_forest_depletion` to 0.
 made every rep run of `resource_depletion`, `renewable_electricity` and
 `coal_electricity` a run of zeros.
 
-Currently 2 indicators exceed 0.3: `protected_areas` 0.852 and `freshwater_withdrawals`
-0.438. The other ten are 0.0, so **no point on the page is faded at the moment**; the two
-indicators above show the general note instead.
+The threshold is **0.5** (team decision 2026-11-17, was 0.3). Purpose of fading, from the
+proposal: show that a flat stretch is an old estimate carried forward, not a measured
+standstill (Viet Nam's freshwater withdrawals stay at 22.8% from 2005 to 2021). With zeros
+no longer counted, only two indicators have `rep` cells: `freshwater_withdrawals` 0.438
+(faded point by point, as the proposal says) and `protected_areas` 0.852 (general note
+only, because fading 85% of the points would fade the whole chart).
 
 ### `net_forest_depletion` needs its own note
 

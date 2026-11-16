@@ -293,12 +293,15 @@ of its points faded -> the fading becomes noise and loses its warning value.
 The script precomputes the share so the page can **choose how to show it**, instead of letting the page
 count it itself (keeping the rule that the browser computes nothing).
 
-Frontend rule: `repShare <= 0.3` fades each point; `repShare > 0.3`
+Frontend rule: `repShare <= 0.5` fades each point; `repShare > 0.5`
 fades no points and only shows one general note stating the share.
-The 0.3 threshold was chosen at the largest gap in the real data at the time (2026-10-08).
-Since zeros stopped counting as `rep` (2026-11-16), only `protected_areas` (0.852) and
-`freshwater_withdrawals` (0.438) have any `rep` cells; the other ten are 0.0, so no point
-is faded on the page and the two indicators above show the general note.
+
+The threshold was 0.3 (2026-10-08), set at the largest gap in the data at that time. Once
+zeros stopped counting as `rep` (2026-11-16), only `protected_areas` (0.852) and
+`freshwater_withdrawals` (0.438) had any `rep` cells, so 0.3 faded nothing, not even the
+proposal's own example (Viet Nam's freshwater flat at 22.8% from 2005 to 2021). The team
+raised it to 0.5 on 2026-11-17: freshwater is faded point by point, protected areas keeps
+the general note.
 
 ---
 
