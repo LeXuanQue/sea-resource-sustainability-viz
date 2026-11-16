@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Task 1: in cau truc CSV va bang khoang nam THAT, doi chieu voi bang cau hinh.
+"""Task 1: print the CSV structure and the ACTUAL year ranges, compared with the config table.
 
-Script nay chi DOC va IN, khong ghi file nao. Dung de:
-  - kiem tra CSV moi tai ve co dung cau truc mong doi khong,
-  - doi chieu khoang nam trong proposal voi khoang nam that cua CSV,
-  - lay so lieu dan vao bao cao (phan Data / Coverage).
+This script only READS and PRINTS; it writes no files. Use it to:
+  - check that a newly downloaded CSV has the expected structure,
+  - compare the proposal's year ranges with the CSV's actual year ranges,
+  - get figures for the report (Data / Coverage section).
 
-Chay:
+Run:
     python3 scripts/inspect_csv.py --csv ../WB_ESG.csv
 """
 
@@ -21,30 +21,30 @@ import indicators as CFG
 
 
 def show_structure(csv_path):
-    """In ten cot va mot dong du lieu, de thay CSV o dang DAI hay dang RONG."""
+    """Print the column names and one data row, to see whether the CSV is LONG or WIDE."""
     with open(csv_path, newline="", encoding="utf-8") as f:
         reader = csv.reader(f)
         header = next(reader)
         first = next(reader)
-    print(f"So cot: {len(header)}")
-    print("Cac cot ta dung:")
+    print(f"Number of columns: {len(header)}")
+    print("Columns we use:")
     for name in ["REF_AREA", "REF_AREA_LABEL", "INDICATOR", "INDICATOR_LABEL",
                  "TIME_PERIOD", "OBS_VALUE", "OBS_STATUS", "UNIT_MEASURE_LABEL"]:
         idx = header.index(name)
         print(f"  [{idx:2}] {name:22} = {first[idx]!r}")
-    print("\nCac cot ta BO QUA (khong anh huong 8 nuoc x 12 chi so):")
+    print("\nColumns we IGNORE (no effect on 8 countries x 12 indicators):")
     print("  " + ", ".join(c for c in header
                            if c not in {"REF_AREA", "REF_AREA_LABEL", "INDICATOR",
                                         "INDICATOR_LABEL", "TIME_PERIOD",
                                         "OBS_VALUE", "OBS_STATUS",
                                         "UNIT_MEASURE_LABEL"}))
-    print("\nDang du lieu: DAI (long) -- moi dong la mot quan sat nuoc x chi so x nam.")
-    print("  => Nam nam trong MOT cot TIME_PERIOD, khong phai moi nam mot cot.")
-    print("  => THIEU DU LIEU = THIEU HAN DONG, khong phai o trong.")
+    print("\nData shape: LONG -- each row is one country x indicator x year observation.")
+    print("  => Years are in ONE TIME_PERIOD column, not one column per year.")
+    print("  => MISSING DATA = A MISSING ROW, not an empty cell.")
 
 
 def scan(csv_path):
-    """Doc CSV mot lan, tra ve (gia tri goc, nhan nuoc, nhan chi so, thong ke)."""
+    """Read the CSV once; return (raw values, country labels, indicator labels, stats)."""
     key_to_id = {CFG.csv_indicator_key(i["code"]): i["id"] for i in CFG.INDICATORS}
     wanted_countries = set(CFG.COUNTRY_CODES)
     raw, country_labels, indicator_labels = {}, {}, {}
@@ -65,28 +65,28 @@ def scan(csv_path):
 
 
 def show_year_ranges(raw, indicator_labels):
-    """Bang so sanh: khoang nam PROPOSAL vs khoang nam THAT trong CSV."""
-    print(f"{'chi so':24}{'proposal':>12}{'CSV that':>12}{'dong':>7}"
-          f"{'du?':>6}  ghi chu")
+    """Comparison table: PROPOSAL year range vs ACTUAL year range in the CSV."""
+    print(f"{'indicator':24}{'proposal':>12}{'CSV actual':>12}{'rows':>7}"
+          f"{'full?':>6}  note")
     for ind in CFG.INDICATORS:
         ind_id = ind["id"]
         years = [y for (c, i, y) in raw if i == ind_id]
         if not years:
-            print(f"{ind_id:24}{'':>12}{'KHONG CO DU LIEU':>12}")
+            print(f"{ind_id:24}{'':>12}{'NO DATA':>12}")
             continue
         real = f"{min(years)}-{max(years)}"
         cfg = f"{ind['years'][0]}-{ind['years'][1]}"
-        # So dong ta thuc su dung sau khi cat theo khoang nam cua proposal.
+        # Number of rows we actually use after cutting to the proposal's year range.
         inside = sum(1 for (c, i, y) in raw
                      if i == ind_id and ind["years"][0] <= y <= ind["years"][1])
         span = ind["years"][1] - ind["years"][0] + 1
-        note = "" if real == cfg else f"CSV rong hon, da cat theo proposal"
+        note = "" if real == cfg else f"CSV is wider, cut to the proposal range"
         print(f"{ind_id:24}{cfg:>12}{real:>12}{inside:>7}"
               f"{inside * 100 // (span * 8):>5}%  {note}")
 
 
 def show_per_country(raw):
-    """Nam dau / nam cuoi / so nam cua tung nuoc -- doi chieu phan Coverage."""
+    """First year / last year / number of years per country -- to check the Coverage section."""
     for ind in CFG.INDICATORS:
         ind_id = ind["id"]
         lo, hi = ind["years"]
@@ -95,7 +95,7 @@ def show_per_country(raw):
             ys = sorted(y for (c, i, y) in raw if c == country and i == ind_id
                         and lo <= y <= hi)
             parts.append(f"{country} {ys[0]}-{ys[-1]}({len(ys)})" if ys
-                         else f"{country} TRONG")
+                         else f"{country} EMPTY")
         print(f"{ind_id:24} {'  '.join(parts)}")
 
 
@@ -105,46 +105,46 @@ def main():
     args = parser.parse_args()
     csv_path = os.path.abspath(args.csv)
     if not os.path.exists(csv_path):
-        raise SystemExit(f"LOI: khong thay CSV tai {csv_path}")
+        raise SystemExit(f"ERROR: CSV not found at {csv_path}")
 
     print("=" * 78)
-    print(f"1. CAU TRUC CSV  ({os.path.getsize(csv_path) / 1e6:.0f} MB)")
+    print(f"1. CSV STRUCTURE  ({os.path.getsize(csv_path) / 1e6:.0f} MB)")
     print("=" * 78)
     show_structure(csv_path)
 
     raw, country_labels, indicator_labels, blank, status = scan(csv_path)
 
     print("\n" + "=" * 78)
-    print("2. MAP TEN NUOC  (cot REF_AREA da la ISO3 san, khong can map tu ten)")
+    print("2. COUNTRY NAMES  (REF_AREA is already ISO3, no name mapping needed)")
     print("=" * 78)
     for code, name in CFG.COUNTRIES:
-        label = country_labels.get(code, "KHONG THAY TRONG CSV")
-        flag = "  <-- ten CSV khac ten nhom" if label != name else ""
-        print(f"  {code}  CSV={label:<14} nhom dung={name}{flag}")
+        label = country_labels.get(code, "NOT FOUND IN CSV")
+        flag = "  <-- CSV name differs from team name" if label != name else ""
+        print(f"  {code}  CSV={label:<14} team uses={name}{flag}")
 
     print("\n" + "=" * 78)
-    print("3. MA CHI SO  (CSV them tien to WB_ESG_ va doi dau cham thanh gach duoi)")
+    print("3. INDICATOR CODES  (CSV adds a WB_ESG_ prefix and turns dots into underscores)")
     print("=" * 78)
     for ind in CFG.INDICATORS:
-        found = "co" if any(i == ind["id"] for (c, i, y) in raw) else "KHONG THAY"
+        found = "found" if any(i == ind["id"] for (c, i, y) in raw) else "NOT FOUND"
         print(f"  {ind['code']:22} -> {CFG.csv_indicator_key(ind['code']):30} {found}")
 
     print("\n" + "=" * 78)
-    print("4. O TRONG VA CO TRANG THAI")
+    print("4. EMPTY CELLS AND STATUS FLAGS")
     print("=" * 78)
-    print(f"  Tong quan sat lay duoc (8 nuoc x 12 chi so, moi nam): {len(raw):,}")
-    print(f"  O OBS_VALUE de trong: {blank}")
+    print(f"  Total observations found (8 countries x 12 indicators, all years): {len(raw):,}")
+    print(f"  Empty OBS_VALUE cells: {blank}")
     print(f"  OBS_STATUS: {dict(status)}   (A = Normal value)")
-    print("  => Trong pham vi ta dung, CSV khong co o trong: thieu du lieu")
-    print("     the hien bang viec KHONG CO DONG do.")
+    print("  => Within our scope, the CSV has no empty cells: missing data")
+    print("     shows up as that ROW NOT EXISTING.")
 
     print("\n" + "=" * 78)
-    print("5. KHOANG NAM: PROPOSAL vs CSV THAT")
+    print("5. YEAR RANGES: PROPOSAL vs ACTUAL CSV")
     print("=" * 78)
     show_year_ranges(raw, indicator_labels)
 
     print("\n" + "=" * 78)
-    print("6. KHOANG NAM TUNG NUOC (trong khoang da cat theo proposal)")
+    print("6. YEAR RANGE PER COUNTRY (within the range cut to the proposal)")
     print("=" * 78)
     show_per_country(raw)
 

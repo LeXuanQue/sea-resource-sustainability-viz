@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
-"""Task 5: kiem tra DOC LAP cac file JSON trong data/ bang cach tinh lai tu CSV.
+"""Task 5: INDEPENDENTLY check the JSON files in data/ by recomputing them from the CSV.
 
-=== VI SAO FILE NAY PHAI DOC LAP ===
-File nay CO Y KHONG import `indicators.py` va KHONG import bat ky ham nao cua
-`build_data.py`. Bang 12 chi so duoi day duoc GO LAI BANG TAY tu bang trong
-`data/README.md` va tu proposal. Neu `indicators.py` bi go sai mot con so
-(decimals, tol, khoang nam, direction) thi file nay se bat duoc, vi hai ban
-khong dung chung nguon.
+=== WHY THIS FILE MUST BE INDEPENDENT ===
+This file DELIBERATELY does NOT import `indicators.py` and does NOT import any function from
+`build_data.py`. The 12-indicator table below is RETYPED BY HAND from the table in
+`data/README.md` and from the proposal. If `indicators.py` has a mistyped number
+(decimals, tol, year range, direction), this file will catch it, because the two
+do not share a source.
 
-Cach tinh cung co y khac `build_data.py`:
-  - `build_data.py` doc CSV bang pandas; file nay doc bang module `csv`.
-  - `build_data.py` lam tron bang `Decimal` + `ROUND_HALF_UP`;
-    file nay lam tron bang `Fraction` (so huu ty chinh xac tuyet doi).
-  - `build_data.py` tu viet ham median; file nay dung `statistics.median`.
-  - Vong lap `rep` viet lai theo cau truc khac (while/nhay doan).
+The computation also deliberately differs from `build_data.py`:
+  - `build_data.py` reads the CSV with pandas; this file uses the `csv` module.
+  - `build_data.py` rounds with `Decimal` + `ROUND_HALF_UP`;
+    this file rounds with `Fraction` (exact rational numbers).
+  - `build_data.py` writes its own median function; this file uses `statistics.median`.
+  - The `rep` loop is rewritten with a different structure (while / jump over runs).
 
-Chay:
+Run:
     python3 scripts/verify_data.py --csv ../WB_ESG.csv
     python3 scripts/verify_data.py --csv ../WB_ESG.csv --data data
 """
@@ -29,10 +29,10 @@ import sys
 from fractions import Fraction
 
 # =====================================================================
-# BANG KY VONG -- GO LAI BANG TAY tu data/README.md va proposal.
-# Thu tu cot: id, ma World Bank, direction, mode level, tol, decimals,
-#             nam dau, nam cuoi
-# KHONG duoc copy tu indicators.py.
+# EXPECTED TABLE -- RETYPED BY HAND from data/README.md and the proposal.
+# Column order: id, World Bank code, direction, level mode, tol, decimals,
+#               first year, last year
+# MUST NOT be copied from indicators.py.
 # =====================================================================
 SPEC = [
     ("forest_area",            "AG.LND.FRST.ZS",    "higher", "abs", 3,    1, 1990, 2022),
@@ -49,29 +49,29 @@ SPEC = [
     ("coal_electricity",       "EG.ELC.COAL.ZS",    "lower",  "abs", 3,    1, 1990, 2022),
 ]
 
-# Ten nhom dung de hien thi. CSV ghi "Lao PDR", nhom hien "Laos".
+# Team display names. The CSV says "Lao PDR"; the team shows "Laos".
 SPEC_COUNTRIES = [
     ("VNM", "Viet Nam"), ("IDN", "Indonesia"), ("THA", "Thailand"),
     ("MYS", "Malaysia"), ("PHL", "Philippines"), ("KHM", "Cambodia"),
     ("LAO", "Laos"), ("MMR", "Myanmar"),
 ]
 SPEC_SOURCE = "World Bank Sovereign ESG Data Framework"
-SPEC_ACCESSED = "2026-10-02"        # hang so; xac nhan ngay tai CSV: 2/10/2026
-SPEC_MIN_N = 3                      # n < 3 thi rank/verdict/gap deu null
-SPEC_MIN_N_LATEST_YEAR = 6          # latestYear: nam moi nhat co >= 6/8 nuoc
-SPEC_TOTAL_ROWS_ALL_12 = 2776       # 347 nam x 8 nuoc, khi chay du 12 chi so
-SPEC_REP_SHARE_DECIMALS = 3         # repShare lam tron 3 chu so, nua len tren
+SPEC_ACCESSED = "2026-10-02"        # constant; confirmed CSV download date: 2026-10-02
+SPEC_MIN_N = 3                      # n < 3 means rank/verdict/gap are all null
+SPEC_MIN_N_LATEST_YEAR = 6          # latestYear: most recent year with >= 6/8 countries
+SPEC_TOTAL_ROWS_ALL_12 = 2776       # 347 years x 8 countries, when all 12 indicators run
+SPEC_REP_SHARE_DECIMALS = 3         # repShare rounded to 3 digits, half up
 
 
-# --------------------------------------------------------------- tien ich
+# --------------------------------------------------------------- helpers
 
 def round_half_up(text, decimals):
-    """Lam tron chuoi so thap phan, nua len tren, bang Fraction.
+    """Round a decimal number string, half up, using Fraction.
 
-    Co y KHONG dung Decimal: Fraction la so huu ty chinh xac tuyet doi, nen
-    neu `build_data.py` co loi trong cach dung Decimal thi phep so sanh o day
-    van bat duoc. Chuoi dang "8.6e-05" cung doc duoc vi Fraction nhan float
-    qua trung gian chuoi khoa hoc -- xu ly rieng ben duoi.
+    Deliberately NOT Decimal: Fraction is an exact rational number, so
+    if `build_data.py` misuses Decimal the comparison here
+    still catches it. Strings like "8.6e-05" are readable too because they go
+    through scientific-notation handling -- done separately below.
     """
     value = to_fraction(text)
     scaled = value * (10 ** decimals)
@@ -84,11 +84,11 @@ def round_half_up(text, decimals):
 
 
 def to_fraction(text):
-    """Doi chuoi so trong CSV sang Fraction chinh xac.
+    """Convert a number string from the CSV to an exact Fraction.
 
-    CSV co ca dang thuong ("47.203321964464") va dang khoa hoc
-    ("8.64415377523076e-05"). Fraction khong nhan truc tiep dang khoa hoc nen
-    phai tach phan mu ra.
+    The CSV has both plain form ("47.203321964464") and scientific form
+    ("8.64415377523076e-05"). Fraction does not accept scientific form directly,
+    so the exponent has to be split off.
     """
     text = str(text).strip()
     if "e" in text.lower():
@@ -98,7 +98,7 @@ def to_fraction(text):
 
 
 def fraction_to_rounded(value, decimals):
-    """Lam tron mot Fraction (khong phai chuoi) ve decimals, nua len tren."""
+    """Round a Fraction (not a string) to decimals, half up."""
     scaled = value * (10 ** decimals)
     floor = scaled.numerator // scaled.denominator
     if scaled - floor >= Fraction(1, 2):
@@ -108,19 +108,19 @@ def fraction_to_rounded(value, decimals):
 
 
 def csv_key(code):
-    """AG.LND.FRST.ZS -> WB_ESG_AG_LND_FRST_ZS (go lai, khong goi build_data)."""
+    """AG.LND.FRST.ZS -> WB_ESG_AG_LND_FRST_ZS (retyped, does not call build_data)."""
     return "WB_ESG_" + code.replace(".", "_")
 
 
-# --------------------------------------------------------------- doc CSV
+# --------------------------------------------------------------- read CSV
 
 def load_csv(csv_path, needed_codes):
-    """Doc CSV bang module `csv` (khong pandas). Tra ve dict chuoi goc.
+    """Read the CSV with the `csv` module (no pandas). Return a dict of raw strings.
 
-    Khoa: (ma nuoc, id chi so, nam). CHI chua dong CSV THUC SU TON TAI, nen
-    "khong co khoa" chinh la "khong co dong trong CSV" -- dung de kiem quy tac
-    null. Chu y: khong cat theo khoang nam o day, de kiem duoc ca truong hop
-    build_data.py quen cat.
+    Key: (country code, indicator id, year). It ONLY holds CSV rows that ACTUALLY EXIST, so
+    "no key" means exactly "no row in the CSV" -- used to check the null
+    rule. Note: no cut to the year range here, so the case where
+    build_data.py forgets to cut is also caught.
     """
     key_to_id = {csv_key(code): ind_id for ind_id, code in needed_codes}
     countries = {code for code, _ in SPEC_COUNTRIES}
@@ -139,10 +139,10 @@ def load_csv(csv_path, needed_codes):
     return raw
 
 
-# --------------------------------------------------------------- cac phep kiem
+# --------------------------------------------------------------- checks
 
 class Report:
-    """Gom loi lai thay vi dung ngay, de in HET loi trong mot lan chay."""
+    """Collect errors instead of stopping at the first, so ALL errors print in one run."""
 
     def __init__(self):
         self.errors = []
@@ -156,68 +156,68 @@ class Report:
 
 
 def check_metadata(report, values, specs_present):
-    """meta, danh sach nuoc, va metadata tung chi so phai khop BANG KY VONG."""
+    """meta, the country list, and each indicator's metadata must match the EXPECTED TABLE."""
     meta = values.get("meta", {})
     report.check(meta.get("source") == SPEC_SOURCE,
-                 f"meta.source = {meta.get('source')!r}, ky vong {SPEC_SOURCE!r}")
+                 f"meta.source = {meta.get('source')!r}, expected {SPEC_SOURCE!r}")
     report.check(meta.get("accessed") == SPEC_ACCESSED,
-                 f"meta.accessed = {meta.get('accessed')!r}, ky vong {SPEC_ACCESSED!r}")
+                 f"meta.accessed = {meta.get('accessed')!r}, expected {SPEC_ACCESSED!r}")
 
     got_countries = [(c["code"], c["name"]) for c in values.get("countries", [])]
     report.check(got_countries == SPEC_COUNTRIES,
-                 f"danh sach nuoc lech (ke ca thu tu): {got_countries}")
+                 f"country list differs (including order): {got_countries}")
 
     by_id = {i["id"]: i for i in values.get("indicators", [])}
     for ind_id, code, direction, mode, tol, decimals, y0, y1 in specs_present:
         got = by_id.get(ind_id)
         if not report.check(got is not None,
-                            f"{ind_id}: khong co trong values.json/indicators"):
+                            f"{ind_id}: missing from values.json/indicators"):
             continue
         report.check(got["code"] == code,
-                     f"{ind_id}.code = {got['code']!r}, ky vong {code!r}")
+                     f"{ind_id}.code = {got['code']!r}, expected {code!r}")
         report.check(got["direction"] == direction,
-                     f"{ind_id}.direction = {got['direction']!r}, ky vong {direction!r}")
+                     f"{ind_id}.direction = {got['direction']!r}, expected {direction!r}")
         report.check(got["decimals"] == decimals,
-                     f"{ind_id}.decimals = {got['decimals']}, ky vong {decimals}")
+                     f"{ind_id}.decimals = {got['decimals']}, expected {decimals}")
         report.check(got["years"] == [y0, y1],
-                     f"{ind_id}.years = {got['years']}, ky vong {[y0, y1]}")
+                     f"{ind_id}.years = {got['years']}, expected {[y0, y1]}")
         if mode is None:
             report.check(got["verdict"] is None,
-                         f"{ind_id}.verdict = {got['verdict']}, ky vong null "
+                         f"{ind_id}.verdict = {got['verdict']}, expected null "
                          f"(direction none)")
         else:
             report.check(got["verdict"] == {"mode": mode, "tol": tol},
                          f"{ind_id}.verdict = {got['verdict']}, "
-                         f"ky vong {{'mode': {mode!r}, 'tol': {tol}}}")
+                         f"expected {{'mode': {mode!r}, 'tol': {tol}}}")
 
 
 def check_rows(report, values, raw, specs_present):
-    """So dong, gia tri, null, v = 0, va co rep."""
+    """Row count, values, nulls, v = 0, and the rep flag."""
     rows_by_key = {}
     for row in values["rows"]:
         key = (row["c"], row["i"], row["y"])
         if key in rows_by_key:
-            report.errors.append(f"values.json co dong trung: {key}")
+            report.errors.append(f"values.json has a duplicate row: {key}")
         rows_by_key[key] = row
 
-    # --- so dong
+    # --- row count
     expected = sum((y1 - y0 + 1) for _, _, _, _, _, _, y0, y1 in specs_present) * 8
     report.check(len(values["rows"]) == expected,
-                 f"so dong = {len(values['rows'])}, ky vong {expected}")
+                 f"row count = {len(values['rows'])}, expected {expected}")
     if len(specs_present) == 12:
         report.check(len(values["rows"]) == SPEC_TOTAL_ROWS_ALL_12,
-                     f"chay du 12 chi so: so dong = {len(values['rows'])}, "
-                     f"ky vong {SPEC_TOTAL_ROWS_ALL_12}")
+                     f"all 12 indicators: row count = {len(values['rows'])}, "
+                     f"expected {SPEC_TOTAL_ROWS_ALL_12}")
 
     zeros_true, zeros_rounded = 0, 0
     for ind_id, _, _, _, _, decimals, y0, y1 in specs_present:
         years = list(range(y0, y1 + 1))
         for country, _ in SPEC_COUNTRIES:
-            # --- moi to hop phai co dung mot dong
+            # --- every combination must have exactly one row
             missing = [y for y in years if (country, ind_id, y) not in rows_by_key]
             if missing:
                 report.errors.append(
-                    f"{ind_id} {country}: thieu dong cho nam {missing[:5]}")
+                    f"{ind_id} {country}: missing rows for years {missing[:5]}")
                 continue
             report.checks += len(years)
 
@@ -225,51 +225,51 @@ def check_rows(report, values, raw, specs_present):
                 row = rows_by_key[(country, ind_id, year)]
                 source = raw.get((country, ind_id, year))
 
-                # --- quy tac null: null KHI VA CHI KHI khong co dong trong CSV
+                # --- null rule: null IF AND ONLY IF there is no row in the CSV
                 if source is None:
                     if row["v"] is not None:
                         report.errors.append(
-                            f"{ind_id} {country} {year}: CSV KHONG CO DONG nhung "
-                            f"json ghi v = {row['v']!r} (phai la null)")
+                            f"{ind_id} {country} {year}: CSV HAS NO ROW but "
+                            f"the json says v = {row['v']!r} (must be null)")
                     continue
                 if row["v"] is None:
                     report.errors.append(
-                        f"{ind_id} {country} {year}: CSV co dong ({source}) nhung "
-                        f"json ghi v = null")
+                        f"{ind_id} {country} {year}: CSV has a row ({source}) but "
+                        f"the json says v = null")
                     continue
 
-                # --- gia tri phai bang gia tri goc lam tron theo decimals
+                # --- the value must equal the raw value rounded to decimals
                 want = round_half_up(source, decimals)
                 if row["v"] != want:
                     report.errors.append(
-                        f"{ind_id} {country} {year}: v = {row['v']!r}, tinh lai tu "
-                        f"CSV ({source}) ra {want!r}")
+                        f"{ind_id} {country} {year}: v = {row['v']!r}, recomputed from "
+                        f"CSV ({source}) gives {want!r}")
 
-                # --- v = 0 chi duoc phep khi CSV that su la 0, hoac la so rat
-                #     nho lam tron ve 0. Dieu TUYET DOI khong duoc phep la
-                #     v = 0 do thieu du lieu -- da chan o nhanh source is None.
+                # --- v = 0 is only allowed when the CSV really is 0, or a very
+                #     small number rounded to 0. What is NEVER allowed is
+                #     v = 0 because of missing data -- blocked in the source is None branch.
                 if row["v"] == 0:
                     if to_fraction(source) == 0:
                         zeros_true += 1
                     else:
                         zeros_rounded += 1
 
-            # --- rep: vong lap viet lai theo cau truc nhay doan
+            # --- rep: loop rewritten with a jump-over-runs structure
             expected_rep = recompute_rep(raw, country, ind_id, years)
             for year in years:
                 got = rows_by_key[(country, ind_id, year)]["rep"]
                 if got != (year in expected_rep):
                     report.errors.append(
-                        f"{ind_id} {country} {year}: rep = {got}, tinh lai ra "
+                        f"{ind_id} {country} {year}: rep = {got}, recomputed gives "
                         f"{year in expected_rep}")
     return zeros_true, zeros_rounded
 
 
 def recompute_rep(raw, country, ind_id, years):
-    """Tap cac nam nam trong chuoi >= 3 nam lien tiep cung gia tri GOC.
+    """Set of years inside a run of >= 3 consecutive years with the same RAW value.
 
-    Cau truc khac `build_data.py`: o day nhay tung doan (tim het doan bang nhau
-    roi moi quyet dinh), thay vi cong don tung nam. Null cat chuoi.
+    Structure differs from `build_data.py`: here we jump over whole runs (find the full run of
+    equal values, then decide), instead of accumulating year by year. Null breaks a run.
     """
     sequence = [raw.get((country, ind_id, y)) for y in years]
     repeated = set()
@@ -288,18 +288,18 @@ def recompute_rep(raw, country, ind_id, years):
 
 
 def check_snapshot(report, snapshot, raw, specs_present):
-    """median, n, rank, verdict, gap, quy tac n < 3, direction none, latestYear."""
+    """median, n, rank, verdict, gap, the n < 3 rule, direction none, latestYear."""
     for ind_id, _, direction, mode, tol, decimals, y0, y1 in specs_present:
         block = snapshot.get(ind_id)
         if not report.check(block is not None,
-                            f"{ind_id}: khong co trong snapshot.json"):
+                            f"{ind_id}: missing from snapshot.json"):
             continue
         years = list(range(y0, y1 + 1))
         years_block = block.get("years", {})
 
         report.check(sorted(years_block) == sorted(str(y) for y in years),
-                     f"{ind_id}: snapshot thieu/thua nam "
-                     f"(co {len(years_block)}, ky vong {len(years)})")
+                     f"{ind_id}: snapshot has missing/extra years "
+                     f"(has {len(years_block)}, expected {len(years)})")
 
         for year in years:
             entry = years_block.get(str(year))
@@ -312,29 +312,29 @@ def check_snapshot(report, snapshot, raw, specs_present):
             }
             n = len(present)
             report.check(entry["n"] == n,
-                         f"{ind_id} {year}: n = {entry['n']}, tinh lai ra {n}")
+                         f"{ind_id} {year}: n = {entry['n']}, recomputed gives {n}")
 
-            # --- nuoc thieu so KHONG duoc co muc trong countries
+            # --- countries with no value must NOT have an entry in countries
             extra = set(entry["countries"]) - set(present)
             report.check(not extra,
-                         f"{ind_id} {year}: cac nuoc {sorted(extra)} khong co so "
-                         f"trong CSV nhung co muc trong snapshot.countries")
+                         f"{ind_id} {year}: countries {sorted(extra)} have no value "
+                         f"in the CSV but have an entry in snapshot.countries")
             absent = set(present) - set(entry["countries"])
             report.check(not absent,
-                         f"{ind_id} {year}: cac nuoc {sorted(absent)} co so nhung "
-                         f"thieu muc trong snapshot.countries")
+                         f"{ind_id} {year}: countries {sorted(absent)} have a value but "
+                         f"no entry in snapshot.countries")
 
             if n == 0:
                 report.check(entry["median"] is None,
-                             f"{ind_id} {year}: n = 0 nhung median = {entry['median']}")
+                             f"{ind_id} {year}: n = 0 but median = {entry['median']}")
                 continue
 
-            # --- median bang statistics.median tren Fraction (cach khac)
+            # --- median via statistics.median on Fractions (a different method)
             fractions = sorted(to_fraction(str(v)) for v in present.values())
             median = fraction_to_rounded(statistics.median(fractions), decimals)
             report.check(entry["median"] == median,
                          f"{ind_id} {year}: median = {entry['median']}, "
-                         f"tinh lai ra {median}")
+                         f"recomputed gives {median}")
 
             comparable = n >= SPEC_MIN_N
             for country, value in present.items():
@@ -342,41 +342,41 @@ def check_snapshot(report, snapshot, raw, specs_present):
                 if got is None:
                     continue
 
-                # --- QUY TAC 1: n < 3 thi rank, verdict, gap deu null.
-                #     Quy tac nay THANG quy tac direction none.
+                # --- RULE 1: n < 3 means rank, verdict, gap are all null.
+                #     This rule WINS over the direction none rule.
                 if not comparable:
                     for field in ("rank", "verdict", "gap"):
                         report.check(
                             got[field] is None,
                             f"{ind_id} {year} {country}: n = {n} < {SPEC_MIN_N} "
-                            f"nhung {field} = {got[field]!r} (phai la null)")
+                            f"but {field} = {got[field]!r} (must be null)")
                     continue
 
-                # --- gap: luon co khi n >= 3, KE CA direction none
+                # --- gap: always present when n >= 3, INCLUDING direction none
                 gap = fraction_to_rounded(
                     to_fraction(str(value)) - to_fraction(str(median)), decimals)
                 report.check(got["gap"] == gap,
                              f"{ind_id} {year} {country}: gap = {got['gap']}, "
-                             f"tinh lai ra {gap}")
+                             f"recomputed gives {gap}")
 
-                # --- QUY TAC 2: direction none thi rank va verdict LUON null
+                # --- RULE 2: direction none means rank and verdict are ALWAYS null
                 if direction == "none":
                     report.check(got["rank"] is None,
-                                 f"{ind_id} {year} {country}: direction none nhung "
-                                 f"rank = {got['rank']!r} (phai la null)")
+                                 f"{ind_id} {year} {country}: direction none but "
+                                 f"rank = {got['rank']!r} (must be null)")
                     report.check(got["verdict"] is None,
-                                 f"{ind_id} {year} {country}: direction none nhung "
-                                 f"verdict = {got['verdict']!r} (phai la null)")
+                                 f"{ind_id} {year} {country}: direction none but "
+                                 f"verdict = {got['verdict']!r} (must be null)")
                     continue
 
-                # --- rank: 1 = tot nhat; hoa thi cung hang kieu 1, 2, 2, 4
+                # --- rank: 1 = best; ties share a rank as 1, 2, 2, 4
                 if direction == "higher":
                     better = sum(1 for o in present.values() if o > value)
                 else:
                     better = sum(1 for o in present.values() if o < value)
                 report.check(got["rank"] == better + 1,
                              f"{ind_id} {year} {country}: rank = {got['rank']}, "
-                             f"tinh lai ra {better + 1}")
+                             f"recomputed gives {better + 1}")
 
                 # --- verdict
                 if mode == "abs":
@@ -392,29 +392,29 @@ def check_snapshot(report, snapshot, raw, specs_present):
                     want = "better" if gap_exact < 0 else "worse"
                 report.check(got["verdict"] == want,
                              f"{ind_id} {year} {country}: verdict = "
-                             f"{got['verdict']!r}, tinh lai ra {want!r}")
+                             f"{got['verdict']!r}, recomputed gives {want!r}")
 
-        # --- latestYear: nam MOI NHAT co >= 6/8 nuoc co so
+        # --- latestYear: the MOST RECENT year with >= 6/8 countries reporting
         qualifying = [y for y in years
                       if sum(1 for c, _ in SPEC_COUNTRIES
                              if (c, ind_id, y) in raw) >= SPEC_MIN_N_LATEST_YEAR]
         if qualifying:
             report.check(block["latestYear"] == max(qualifying),
-                         f"{ind_id}: latestYear = {block['latestYear']}, tinh lai "
-                         f"ra {max(qualifying)}")
+                         f"{ind_id}: latestYear = {block['latestYear']}, recomputed "
+                         f"gives {max(qualifying)}")
         else:
             report.errors.append(
-                f"{ind_id}: KHONG nam nao dat {SPEC_MIN_N_LATEST_YEAR}/8 nuoc -- "
-                f"quy tac latestYear khong ap dung duoc, can nhom quyet dinh")
+                f"{ind_id}: NO year reaches {SPEC_MIN_N_LATEST_YEAR}/8 countries -- "
+                f"the latestYear rule cannot apply, the team must decide")
 
 
 def check_rep_share(report, values, raw, specs_present):
-    """repShare = (so o rep) / (so o co so), lam tron 3 chu so, nua len tren.
+    """repShare = (rep cells) / (cells with a value), rounded to 3 digits, half up.
 
-    Tinh lai doc lap: `build_data.py` chia bang `Decimal`, o day chia bang
-    `Fraction` (chinh xac tuyet doi, khong co buoc lam tron trung gian nao).
-    So o rep lay tu `recompute_rep` -- vong lap rep viet lai o tren, khong phai
-    doc tu `values.json`.
+    Recomputed independently: `build_data.py` divides with `Decimal`, here we divide with
+    `Fraction` (exact, with no intermediate rounding step).
+    The rep cell count comes from `recompute_rep` -- the rep loop rewritten above, not
+    read from `values.json`.
     """
     by_id = {i["id"]: i for i in values.get("indicators", [])}
     for ind_id, _, _, _, _, _, y0, y1 in specs_present:
@@ -422,7 +422,7 @@ def check_rep_share(report, values, raw, specs_present):
         if got is None:
             continue
         if not report.check("repShare" in got,
-                            f"{ind_id}: thieu truong repShare trong "
+                            f"{ind_id}: repShare field missing from "
                             f"values.json/indicators"):
             continue
         years = list(range(y0, y1 + 1))
@@ -431,25 +431,25 @@ def check_rep_share(report, values, raw, specs_present):
         rep = sum(len(recompute_rep(raw, country, ind_id, years))
                   for country, _ in SPEC_COUNTRIES)
         if filled == 0:
-            # Khong duoc chia cho 0: quy uoc repShare = 0.0
+            # Never divide by 0: by convention repShare = 0.0
             want = 0.0
         else:
             want = fraction_to_rounded(Fraction(rep, filled),
                                        SPEC_REP_SHARE_DECIMALS)
         report.check(got["repShare"] == want,
-                     f"{ind_id}: repShare = {got['repShare']}, tinh lai ra {want} "
-                     f"({rep} o rep / {filled} o co so)")
+                     f"{ind_id}: repShare = {got['repShare']}, recomputed gives {want} "
+                     f"({rep} rep cells / {filled} cells with a value)")
 
 
 def check_coverage(report, coverage, raw, specs_present):
-    """first, last, count cua tung nuoc; va phai co du 8 nuoc."""
+    """first, last, count for each country; all 8 countries must be present."""
     for ind_id, _, _, _, _, _, y0, y1 in specs_present:
         block = coverage.get(ind_id)
         if not report.check(block is not None,
-                            f"{ind_id}: khong co trong coverage.json"):
+                            f"{ind_id}: missing from coverage.json"):
             continue
         report.check(sorted(block) == sorted(c for c, _ in SPEC_COUNTRIES),
-                     f"{ind_id}: coverage thieu/thua nuoc ({sorted(block)})")
+                     f"{ind_id}: coverage has missing/extra countries ({sorted(block)})")
         for country, _ in SPEC_COUNTRIES:
             got = block.get(country)
             if got is None:
@@ -462,20 +462,20 @@ def check_coverage(report, coverage, raw, specs_present):
                 "count": len(have),
             }
             report.check(got == want,
-                         f"{ind_id} {country}: coverage = {got}, tinh lai ra {want}")
+                         f"{ind_id} {country}: coverage = {got}, recomputed gives {want}")
 
 
 def check_no_nan(report, data_dir):
-    """Khong duoc co NaN / Infinity: JSON chuan khong co, JSON.parse se bao loi."""
+    """No NaN / Infinity allowed: standard JSON has none, and JSON.parse would fail."""
     for name in ("values.json", "snapshot.json", "coverage.json"):
         path = os.path.join(data_dir, name)
         text = open(path, encoding="utf-8").read()
         for token in ("NaN", "Infinity"):
-            report.check(token not in text, f"{name} co chua {token!r}")
-        # Doc lai bang parser nghiem ngat: bat ca truong hop viet hoa khac.
+            report.check(token not in text, f"{name} contains {token!r}")
+        # Re-read with a strict parser: also catches other capitalisations.
         try:
             json.loads(text, parse_constant=lambda c: (_ for _ in ()).throw(
-                ValueError(f"hang so khong hop le: {c}")))
+                ValueError(f"invalid constant: {c}")))
         except ValueError as exc:
             report.errors.append(f"{name}: {exc}")
 
@@ -490,27 +490,27 @@ def main():
 
     csv_path = os.path.abspath(args.csv)
     if not os.path.exists(csv_path):
-        raise SystemExit(f"LOI: khong thay CSV tai {csv_path}")
+        raise SystemExit(f"ERROR: CSV not found at {csv_path}")
 
     values = json.load(open(os.path.join(args.data, "values.json"), encoding="utf-8"))
     snapshot = json.load(open(os.path.join(args.data, "snapshot.json"), encoding="utf-8"))
     coverage = json.load(open(os.path.join(args.data, "coverage.json"), encoding="utf-8"))
 
-    # Chay duoc cho ca ban chi co forest_area lan ban du 12 chi so: lay danh
-    # sach chi so TU FILE, roi doi chieu tung chi so voi BANG KY VONG.
+    # Works for both the forest_area-only version and the full 12-indicator version: take the
+    # indicator list FROM THE FILE, then compare each indicator with the EXPECTED TABLE.
     present_ids = [i["id"] for i in values.get("indicators", [])]
     unknown = [i for i in present_ids if i not in {s[0] for s in SPEC}]
     if unknown:
-        raise SystemExit(f"LOI: values.json co chi so khong co trong bang ky vong: "
+        raise SystemExit(f"ERROR: values.json has indicators not in the expected table: "
                          f"{unknown}")
     specs_present = [s for s in SPEC if s[0] in present_ids]
 
     print(f"CSV      : {csv_path}")
     print(f"data/    : {os.path.abspath(args.data)}")
-    print(f"chi so   : {len(specs_present)}/12 ({', '.join(present_ids)})")
+    print(f"indicators: {len(specs_present)}/12 ({', '.join(present_ids)})")
 
     raw = load_csv(csv_path, [(s[0], s[1]) for s in specs_present])
-    print(f"doc CSV  : {len(raw):,} quan sat co so (moi nam, chua cat khoang)\n")
+    print(f"read CSV : {len(raw):,} observations with a value (all years, not yet cut)\n")
 
     report = Report()
     check_metadata(report, values, specs_present)
@@ -520,18 +520,18 @@ def main():
     check_coverage(report, coverage, raw, specs_present)
     check_no_nan(report, args.data)
 
-    print(f"v = 0    : {zeros_true} dong CSV that su bang 0, "
-          f"{zeros_rounded} dong la so rat nho lam tron ve 0")
-    print(f"so phep kiem: {report.checks:,}\n")
+    print(f"v = 0    : {zeros_true} CSV rows that really are 0, "
+          f"{zeros_rounded} rows that are tiny numbers rounded to 0")
+    print(f"checks run: {report.checks:,}\n")
 
     if report.errors:
-        print(f"FAIL -- {len(report.errors)} loi:")
+        print(f"FAIL -- {len(report.errors)} errors:")
         for message in report.errors[:60]:
             print(f"  - {message}")
         if len(report.errors) > 60:
-            print(f"  ... va {len(report.errors) - 60} loi nua")
+            print(f"  ... and {len(report.errors) - 60} more errors")
         sys.exit(1)
-    print("PASS -- khong co lech nao")
+    print("PASS -- no differences")
 
 
 if __name__ == "__main__":
