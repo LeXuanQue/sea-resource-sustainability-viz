@@ -126,14 +126,21 @@ def mark_repeated(values_by_year, years):
     updated this number", so it must look at the raw numbers.
 
     A missing year BREAKS the run: 2005-2006-(missing)-2008 is not a 3-year run.
+
+    A run of exact zeros is NOT flagged (team decision 2026-11-16). Zero is a real
+    measured value (e.g. no net forest depletion), not an old estimate carried
+    forward; flagging it made net_forest_depletion look 62% "repeated", and every
+    rep run of three other indicators was a run of zeros. A zero breaks a run like
+    a null does. Tiny raw values
+    that only ROUND to 0 are not exact zeros and are treated like any other value.
     """
     repeated = set()
     run_years = []
     run_value = None
     for year in years:
         value = values_by_year.get(year)
-        if value is None:
-            run_years, run_value = [], None  # null breaks the run
+        if value is None or Decimal(value) == 0:
+            run_years, run_value = [], None  # null or exact zero breaks the run
             continue
         if value == run_value:
             run_years.append(year)
@@ -185,25 +192,24 @@ def ranks_for(values_by_country, direction):
 
 
 def verdict_for(value, median, gap, direction, verdict_rule):
-    """better / worse / level for one country in one year.
+    """better / worse / level for one country in one year (rule F).
 
-    Step 1 -- is it inside the "level" band:
-      mode abs: |gap| <= tol, tol in PERCENTAGE POINTS (e.g. 3 points).
-      mode rel: |gap| <= tol * |median|, tol is a ratio (e.g. 0.05 = 5%).
-                With median = 0 the product is 0, so it is "level" only when the value is exactly 0.
-    Step 2 -- if not "level", only the sign of gap matters:
+    Step 1: is the gap inside the "level" band?
+      threshold = max(rel x |median|, floor), both from indicators.py.
+      rel = 0.03 is the proposal's "level within 3%"; floor stops indicators with
+      a small median (protected areas, % of GNI) from almost never being level.
+    Step 2: if not level, only the sign of the gap matters.
       direction higher: gap > 0 is better (more forest is better).
       direction lower:  gap < 0 is better (less pollution is better).
+    gap is the country value minus the ROUNDED median, so a reader can redo the
+    subtraction from the numbers shown on the page.
     """
     if direction == "none" or verdict_rule is None:
         return None
-    mode, tol = verdict_rule["mode"], verdict_rule["tol"]
-    if mode == "abs":
-        threshold = tol
-    elif mode == "rel":
-        threshold = tol * abs(median)
-    else:
-        raise SystemExit(f"ERROR: unknown verdict mode: {mode}")
+    rel = Decimal(str(verdict_rule["rel"]))
+    floor = Decimal(str(verdict_rule["floor"]))
+    threshold = max(rel * abs(Decimal(str(median))), floor)
+    gap = Decimal(str(gap))
     if abs(gap) <= threshold:
         return "level"
     if direction == "higher":

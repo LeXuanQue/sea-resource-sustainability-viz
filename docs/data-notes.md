@@ -225,17 +225,23 @@ without knowing the original forest area.
 again even though both inputs are already rounded: `20.1 - 17.3` gives
 `2.8000000000000003` in Python, and that garbage number would go straight onto the tooltip.
 
-- Step 1, is it inside the "level" band:
-  - mode `abs`: `|gap| <= tol`, `tol` in **percentage points** (e.g. 3 points).
-  - mode `rel`: `|gap| <= tol * |median|`, `tol` is a **ratio** (0.05 = 5%).
-    With `median = 0` the product is 0, so it is "level" only when the value is **exactly 0**.
+`median` here is the **rounded** median, so a reader can redo the subtraction from the
+numbers on the page (47.2 - 45.6 = 1.6 for Viet Nam's forest area in 2022).
+
+- Step 1, is it inside the "level" band (rule F, section 4c):
+  `|gap| <= max(rel x |median|, floor)`, with `rel = 0.03` for every ranked indicator,
+  `floor = 1` point for % share indicators, `0.5` point for % of GNI indicators and
+  `0` for energy_intensity.
 - Step 2, if not "level", only the sign of `gap` matters:
   - `higher`: `gap > 0` is `better` (more forest is better).
   - `lower`: `gap < 0` is `better` (less pollution is better).
 
 ### `rep` (repeated values)
-`rep = true` when the same value repeats **for 3 or more consecutive years**; **every year**
-in the run is flagged, not only the first. `null` **breaks** a run
+`rep = true` when the same **non-zero** value repeats **for 3 or more consecutive years**;
+**every year** in the run is flagged, not only the first. `null` **breaks** a run, and so
+does an **exact 0** (team decision 2026-11-16: zero is a real value, such as no net forest
+depletion or no coal power, not an old estimate carried forward; tiny raw values that only
+round to 0 are not exact zeros)
 (2005-2006-(missing)-2008 is not a 3-year run). Computed on the **raw** values before
 rounding, because rounding can turn 22.781 and 22.784 into the same 22.8 and create
 a **false** repeated run.
@@ -289,48 +295,43 @@ count it itself (keeping the rule that the browser computes nothing).
 
 Frontend rule: `repShare <= 0.3` fades each point; `repShare > 0.3`
 fades no points and only shows one general note stating the share.
-The 0.3 threshold was chosen at the largest gap in the real data: 3 indicators are at
-0.438-0.852, the other nine are all `<= 0.141`, and no indicator falls in between.
+The 0.3 threshold was chosen at the largest gap in the real data at the time (2026-10-08).
+Since zeros stopped counting as `rep` (2026-11-16), only `protected_areas` (0.852) and
+`freshwater_withdrawals` (0.438) have any `rep` cells; the other ten are 0.0, so no point
+is faded on the page and the two indicators above show the general note.
 
 ---
 
-## 4c. `level` threshold decision (team decision 2026-10-08)
+## 4c. `level` threshold: rule F (team decision 2026-11-13, replaces 2026-10-08)
 
-| indicator | before | after | % level before | % level after |
-|---|---|---|---|---|
-| `energy_intensity` | rel 0.05 | **unchanged** rel 0.05 | 25.0% | 25.0% |
-| `resource_depletion` | rel 0.05 | **abs 1.0** | **4.4%** | **27.1%** |
-| `net_forest_depletion` | rel 0.05 | **abs 1.0** | 61.8% | 61.8% |
+A country is "level with the median" when
 
-The other nine indicators are unchanged. After the change, the % level of the 10 indicators with a verdict is
-in the **9.6% - 33.7%** band, except `net_forest_depletion` at 61.8% (a separate reason, see
-section 6.1).
+    |gap| <= max(0.03 x |median|, floor)
 
-### Why `resource_depletion` changed from rel to abs
-The yearly `median` is only **1.01 to 6.88**, but the median `|gap|` is **2.95**.
-So `rel 0.05` gives a threshold of only 0.05-0.34, i.e. **almost 10 times smaller than a typical
-gap**, and "level with the median" is almost never reached: only **11 of 251** cells.
-`abs 1.0` gives 27.1%, in line with the other indicators, and is easy to state in the report:
-*"a difference of less than 1 percentage point of GNI counts as level."*
-Keeping `rel` would need as much as `rel 0.30` to reach 25.5% -- a number that is hard
-to explain.
+| indicators | floor | JSON |
+|---|---|---|
+| % share indicators (forest, protected areas, freshwater, renewable energy, renewable electricity, fossil fuel, coal electricity) | 1 point | `{"rel": 0.03, "floor": 1}` |
+| % of GNI indicators (resource depletion, net forest depletion) | 0.5 point | `{"rel": 0.03, "floor": 0.5}` |
+| energy_intensity (MJ per $, not a share) | none | `{"rel": 0.03, "floor": 0}` |
 
-### Why `net_forest_depletion` HAD to change, even though the result is the same
-The `rel` formula is `|gap| <= tol * |median|`. This indicator has **`median` = 0 in all
-32 years**, so the threshold is always `tol * 0 = 0` **for ANY tol**. Tested up to
-**`rel 5.0` (i.e. 500%)**: the result stays at 61.8%, not a single cell changes.
-This is a **degenerate case**, not a threshold.
+**Why.** The proposal says "level within 3%". Read as 3% of the median, that alone
+breaks for indicators with a small median: protected areas has a median of about 7, so
+the band is only +/-0.2 points; net forest depletion has a median of 0, so the band is 0.
+The floor ignores differences too small to mean anything. This is a team convention, not a
+statistical test, and the page states it. It is deviation D1 from the proposal.
 
-`abs 1.0` gives exactly the same result (`0 better / 155 level / 96 worse`) but
-**no longer rests on a degenerate formula**. The distribution is **bimodal**: 5 countries are
-exactly 0, and the smallest non-zero value is **1.51**. So `abs 0.25`, `0.5`, `1.0`,
-`1.5` all give exactly 61.8%; only `abs 1.6` nudges it up to 62.5%.
-`1.0` was chosen to **share the mode and tol with `resource_depletion`** (same unit,
-% of GNI), which is easier to explain in the report.
+**What it replaced (2026-10-08):** abs 3 points for % share indicators, abs 1.0 for % of GNI,
+rel 5% for energy_intensity. Under that rule Viet Nam's forest area in 2022 (47.2 vs median
+45.6) and renewable energy in 2021 (24.2 vs 26.1) were both "level", while the proposal's
+Figure 1 calls forest "better".
 
-> **Plainly: no threshold can fix this indicator.** The problem is in the data, not in
-> the threshold. The team decided to **keep the indicator and keep the verdict**, with a dedicated
-> note on the interface. Details in section 6.1.
+**Effect (rerun 2026-11-16):** 222 of 2,200 verdicts changed. Viet Nam at the default year
+changes on two indicators only: forest area 2022 level -> better, renewable energy 2021
+level -> worse. Protected areas 2023 stays worse. Level share per indicator is in section 6.3.
+
+**net_forest_depletion is unchanged** (0 better / 155 level / 96 worse): the median is 0 in
+every year and the smallest non-zero value is 1.51, so any floor between 0 and 1.5 gives the
+same result. See section 6.1.
 
 ---
 
@@ -444,14 +445,18 @@ were caught**:
 | `decimals` in `values.json` 1 -> 2 | yes |
 | put a `NaN` into `values.json` | yes |
 
-3 more errors were injected after the threshold change and the addition of `repShare`; **all 3 were caught**,
-each reported in exactly **1 line**, not more:
+4 more errors were injected after rule F and the zero rule for `rep` (2026-11-16);
+**all 4 were caught**, each reported in exactly **1 line**:
 
 | injected error | message |
 |---|---|
-| `resource_depletion`'s `tol` in `values.json` back to `rel 0.05` | `resource_depletion.verdict = {'mode': 'rel', 'tol': 0.05}, expected {'mode': 'abs', 'tol': 1.0}` |
-| `protected_areas` `repShare` 0.852 -> 0.85 | `repShare = 0.85, recomputed gives 0.852 (75 rep cells / 88 cells with a value)` |
-| VNM `net_forest_depletion` 2010 `verdict` (n = 8) -> `better` | `verdict = 'better', recomputed gives 'level'` |
+| `resource_depletion` floor in `values.json` 0.5 -> 1 | `resource_depletion.verdict = {'rel': 0.03, 'floor': 1}, expected {'rel': 0.03, 'floor': 0.5}` |
+| VNM `forest_area` 2022 `verdict` -> `level` (old rule) | `forest_area 2022 VNM: verdict = 'level', recomputed gives 'better'` |
+| VNM `net_forest_depletion` 2010 (value 0) `rep` -> `true` | `net_forest_depletion VNM 2010: rep = True, recomputed gives False` |
+| `net_forest_depletion` `repShare` 0.0 -> 0.618 (old value) | `repShare = 0.618, recomputed gives 0.0 (0 rep cells / 251 cells with a value)` |
+
+Running `verify_data.py` on the data generated before 2026-11-16 also fails (453 errors:
+old verdicts and zero-run `rep` flags), as it should.
 
 This is evidence for the report and for the acceptance checklist.
 
@@ -488,7 +493,7 @@ This is evidence for the report and for the acceptance checklist.
 
     | what changes | edit in `indicators.py` | edit in `verify_data.py` |
     |---|---|---|
-    | `direction`, `level` mode/`tol`, `decimals`, year range | `INDICATORS` | `SPEC` table |
+    | `direction`, `level` rel/floor, `decimals`, year range | `INDICATORS` | `SPEC` table |
     | access date | `ACCESSED_DATE` | `SPEC_ACCESSED` |
     | minimum `n` threshold | `MIN_N_FOR_COMPARISON` | `SPEC_MIN_N` |
     | `latestYear` rule | `MIN_COUNTRIES_FOR_LATEST_YEAR` | `SPEC_MIN_N_LATEST_YEAR` |
@@ -529,28 +534,31 @@ If the page showed a "repeated / not updated" warning label, 85% of cells would 
 | indicator | `rep` share |
 |---|---|
 | protected_areas | 85.2% |
-| net_forest_depletion | 61.8% |
 | freshwater_withdrawals | 43.8% |
-| coal_electricity | 14.1% |
-| resource_depletion | 8.8% |
-| renewable_electricity | 2.2% |
-| the other 6 indicators | 0% |
+| the other 10 indicators | 0% |
+
+Before 2026-11-16, runs of exact zeros also counted: net_forest_depletion 61.8%,
+coal_electricity 14.1%, resource_depletion 8.8%, renewable_electricity 2.2%. All of those
+runs were zeros (no depletion, no coal power), so they no longer count (section 4).
 
 ### 6.3 The `direction` and `level` columns -- DECIDED
-Approved after looking at the distribution (section 4c). Actual "level" counts **after the threshold change**:
+Actual "level" counts under rule F (section 4c), rerun 2026-11-16:
 
-| indicator | mode, tol | "level" / total | % |
+| indicator | threshold | "level" / total | % |
 |---|---|---|---|
-| forest_area | abs 3 | 89 / 264 | 33.7% |
-| protected_areas | abs 3 | 28 / 88 | 31.8% |
-| freshwater_withdrawals | abs 3 | 54 / 192 | 28.1% |
-| **resource_depletion** | **abs 1.0** | **68 / 251** | **27.1%** |
-| energy_intensity | rel 0.05 | 44 / 176 | 25.0% |
-| coal_electricity | abs 3 | 57 / 249 | 22.9% |
-| renewable_energy | abs 3 | 45 / 251 | 17.9% |
-| fossil_fuel | abs 3 | 31 / 249 | 12.4% |
-| renewable_electricity | abs 3 | 22 / 229 | 9.6% |
-| **net_forest_depletion** | **abs 1.0** | **155 / 251** | **61.8%** |
+| energy_intensity | 3% | 31 / 176 | 17.6% |
+| coal_electricity | max(3%, 1) | 38 / 249 | 15.3% |
+| forest_area | max(3%, 1) | 36 / 264 | 13.6% |
+| resource_depletion | max(3%, 0.5) | 28 / 251 | 11.2% |
+| freshwater_withdrawals | max(3%, 1) | 21 / 192 | 10.9% |
+| fossil_fuel | max(3%, 1) | 27 / 249 | 10.8% |
+| renewable_electricity | max(3%, 1) | 17 / 229 | 7.4% |
+| renewable_energy | max(3%, 1) | 18 / 251 | 7.2% |
+| protected_areas | max(3%, 1) | 0 / 88 | 0.0% |
+| **net_forest_depletion** | **max(3%, 0.5)** | **155 / 251** | **61.8%** |
+
+protected_areas has no "level" at all: the 8 countries are spread from 2.9% to 31.8%
+and every gap to the median is larger than 1 point. That is the data, not a bug.
 
 `tree_cover_loss` and `energy_use_per_person` are not in the table: their `direction`
 is `none`, so they have no verdict.

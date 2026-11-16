@@ -38,22 +38,26 @@ number here means changing it in **both** files.
 
 | id | World Bank code | group | unit | direction | level | decimals | years | repShare |
 |---|---|---|---|---|---|---|---|---|
-| `forest_area` | AG.LND.FRST.ZS | resource | % of land area | higher | abs 3 | 1 | 1990-2022 | 0.0 |
+| `forest_area` | AG.LND.FRST.ZS | resource | % of land area | higher | max(3%, 1) | 1 | 1990-2022 | 0.0 |
 | `tree_cover_loss` | AG.LND.FRLS.HA | resource | hectares | **none** | — | 0 | 2002-2021 | 0.0 |
-| `protected_areas` | ER.PTD.TOTL.ZS | resource | % of territory | higher | abs 3 | 1 | 2013-**2023** | **0.852** |
-| `resource_depletion` | NY.ADJ.DRES.GN.ZS | resource | % of GNI | lower | **abs 1.0** | 2 | 1990-2021 | 0.088 |
-| `net_forest_depletion` | NY.ADJ.DFOR.GN.ZS | resource | % of GNI | lower | **abs 1.0** | 2 | 1990-2021 | **0.618** |
-| `freshwater_withdrawals` | ER.H2O.FWTL.ZS | resource | % of internal resources | lower | abs 3 | 1 | 1990-2021 | **0.438** |
-| `energy_intensity` | EG.EGY.PRIM.PP.KD | energy | MJ per $2017 PPP GDP | lower | rel 0.05 | 1 | 2000-2022 | 0.0 |
-| `renewable_energy` | EG.FEC.RNEW.ZS | energy | % of final energy | higher | abs 3 | 1 | 1990-2022 | 0.0 |
-| `renewable_electricity` | EG.ELC.RNEW.ZS | energy | % of electricity | higher | abs 3 | 1 | 1990-2021 | 0.022 |
+| `protected_areas` | ER.PTD.TOTL.ZS | resource | % of territory | higher | max(3%, 1) | 1 | 2013-**2023** | **0.852** |
+| `resource_depletion` | NY.ADJ.DRES.GN.ZS | resource | % of GNI | lower | **max(3%, 0.5)** | 2 | 1990-2021 | 0.0 |
+| `net_forest_depletion` | NY.ADJ.DFOR.GN.ZS | resource | % of GNI | lower | **max(3%, 0.5)** | 2 | 1990-2021 | 0.0 |
+| `freshwater_withdrawals` | ER.H2O.FWTL.ZS | resource | % of internal resources | lower | max(3%, 1) | 1 | 1990-2021 | **0.438** |
+| `energy_intensity` | EG.EGY.PRIM.PP.KD | energy | MJ per $2017 PPP GDP | lower | **3%** | 1 | 2000-2022 | 0.0 |
+| `renewable_energy` | EG.FEC.RNEW.ZS | energy | % of final energy | higher | max(3%, 1) | 1 | 1990-2022 | 0.0 |
+| `renewable_electricity` | EG.ELC.RNEW.ZS | energy | % of electricity | higher | max(3%, 1) | 1 | 1990-2021 | 0.0 |
 | `energy_use_per_person` | EG.USE.PCAP.KG.OE | energy | kg of oil equivalent | **none** | — | 0 | 1990-2022 | 0.0 |
-| `fossil_fuel` | EG.USE.COMM.FO.ZS | energy | % of total energy | lower | abs 3 | 1 | 1990-2022 | 0.0 |
-| `coal_electricity` | EG.ELC.COAL.ZS | energy | % of electricity | lower | abs 3 | 1 | 1990-2022 | 0.141 |
+| `fossil_fuel` | EG.USE.COMM.FO.ZS | energy | % of total energy | lower | max(3%, 1) | 1 | 1990-2022 | 0.0 |
+| `coal_electricity` | EG.ELC.COAL.ZS | energy | % of electricity | lower | max(3%, 1) | 1 | 1990-2022 | 0.0 |
 
-- **`abs N`**: "level with the median" when `|gap| <= N`, with N in **the indicator's unit**
-  (percentage points, % of GNI, MJ...).
-- **`rel R`**: "level with the median" when `|gap| <= R * |median|`, with R a **ratio**.
+- **Level threshold (rule F, team decision 2026-11-13)**: a country is "level with the median"
+  when `|gap| <= max(3% x |median|, floor)`. `max(3%, 1)` = floor of 1 point for % share
+  indicators, `max(3%, 0.5)` = floor of 0.5 point for % of GNI indicators, `3%` = plain
+  relative threshold for energy_intensity (MJ per $, not a share). In JSON:
+  `"verdict": {"rel": 0.03, "floor": 1}`. Why: the proposal says "level within 3%", but with
+  3% alone an indicator with a small median almost never reaches level (protected areas:
+  median ~7, so +/-0.2 points). Reasons and effects in `../docs/data-notes.md` section 4c.
 - Year ranges follow the proposal. 4 indicators have earlier data in the CSV
   (`resource_depletion` and `net_forest_depletion` from 1970, `freshwater_withdrawals`
   from 1980, `energy_use_per_person` from 1971) and **have been cut**; reasons in
@@ -107,7 +111,7 @@ After that, every change must be announced to the whole team.
       "group": "resource",
       "unit": "% of land area",
       "direction": "higher",
-      "verdict": {"mode": "abs", "tol": 3},
+      "verdict": {"rel": 0.03, "floor": 1},
       "decimals": 1,
       "years": [1990, 2022],
       "repShare": 0.0
@@ -129,7 +133,7 @@ After that, every change must be announced to the whole team.
 | `indicators[].years` | `[first year, last year]`, used to build the year slider **for this indicator only** |
 | `indicators[].repShare` | share of `rep`-flagged cells among cells with a value, 3 decimal places. Decides how `rep` is shown -- see the rule below |
 | `rows[].v` | rounded value, or `null` if data is missing. **An integer when `decimals: 0`** |
-| `rows[].rep` | `true` when this value is part of a run of >= 3 consecutive unchanged years (not updated by the World Bank) |
+| `rows[].rep` | `true` when this value is part of a run of >= 3 consecutive unchanged **non-zero** years (not updated by the World Bank). Runs of exact zeros are not flagged |
 
 **Every** country x indicator x year combination within `years` has **one** row in
 `rows`. Missing data still has a row with `v: null`. So there is no need to check
@@ -146,7 +150,7 @@ After that, every change must be announced to the whole team.
         "median": 45.6,
         "n": 8,
         "countries": {
-          "VNM": {"rank": 4, "verdict": "level",  "gap": 1.6},
+          "VNM": {"rank": 4, "verdict": "better", "gap": 1.6},
           "LAO": {"rank": 1, "verdict": "better", "gap": 26.0}
         }
       }
@@ -235,8 +239,15 @@ So read the indicator's `repShare` and choose one of two ways:
 | `repShare <= 0.3` | **fade each point** with `rep = true` |
 | `repShare > 0.3` | **fade no points**; instead show **one general note** below the chart stating the share of repeated points |
 
-Currently 3 indicators exceed 0.3: `protected_areas` 0.852, `net_forest_depletion`
-0.618, `freshwater_withdrawals` 0.438. The other nine are all `<= 0.141`.
+Runs of **exact zeros are not `rep`** (team decision 2026-11-16): 0 is a real
+value (e.g. no net forest depletion, no coal power), not an old estimate carried
+forward. Before this change, all-zero series pushed `net_forest_depletion` to 0.618 and
+made every rep run of `resource_depletion`, `renewable_electricity` and
+`coal_electricity` a run of zeros.
+
+Currently 2 indicators exceed 0.3: `protected_areas` 0.852 and `freshwater_withdrawals`
+0.438. The other ten are 0.0, so **no point on the page is faded at the moment**; the two
+indicators above show the general note instead.
 
 ### `net_forest_depletion` needs its own note
 
