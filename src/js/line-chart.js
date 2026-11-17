@@ -6,7 +6,7 @@
 //   country,                         // selected country code
 //   series: { CODE: [{y, v, rep}] }, // one row per year, v is null when missing
 //   median: [{y, v, n}],             // v is null when n < 3
-//   fadeRep, repShare                // fade repeated values only if repShare <= 0.3
+//   fadeRep, repShare                // fade repeated values only if repShare <= 0.5
 // }
 // options = { selected }             // selected country code
 //
