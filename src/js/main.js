@@ -7,6 +7,9 @@ let rowIndex = new Map(); // "indicator|country|year" -> row
 
 const $ = sel => document.querySelector(sel);
 
+// Repeated values (rep) are drawn lighter only if the indicator's repShare is at most this.
+const REP_FADE_MAX = 0.5;
+
 /** Set text on an optional element; do nothing if it is not in the page. */
 function setText(sel, text) {
     const el = $(sel);
@@ -101,7 +104,7 @@ function syncControls(s, ind) {
 function buildNote(ind, s, snap) {
     const n = snap ? snap.n : 0;
     const parts = [`${ind.unit}, ${s.year}`];
-    parts.push(ind.direction === "none" ? "not ranked, sorted by value" : "best at top");
+    parts.push(`dashed line is the median of the ${n} countries reporting, Viet Nam included`);
     if (n >= 3) {
         parts.push(`dashed line is the median of the ${n} countries reporting`);
     } else {
@@ -168,7 +171,7 @@ function getLineData(s, ind) {
         console.warn(`getLineData: indicator '${ind.id}' has no repShare in values.json.`);
     }
 
-    return { indicator: ind, country: s.country, series, median, fadeRep: repShare !== null && repShare <= 0.3, repShare };
+    return { indicator: ind, country: s.country, series, median, fadeRep: repShare !== null && repShare <= REP_FADE_MAX, repShare };
 }
 
 function render(s) {
