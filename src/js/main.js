@@ -164,7 +164,7 @@ function getLineData(s, ind) {
         median.push({ y, v: sy && sy.n >= 3 ? sy.median : null, n: sy ? sy.n : 0 });
     }
 
-    // repShare <= 0.3: fade repeated points; > 0.3: one general note instead.
+    // repShare <= REP_FADE_MAX (0.5): fade repeated points; above it: one general note instead.
     // repShare is a field of each indicator in values.json (indicators[].repShare).
     const repShare = typeof ind.repShare === "number" ? ind.repShare : null;
     if (repShare === null) {
