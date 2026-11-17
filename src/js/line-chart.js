@@ -57,7 +57,7 @@ function lcIsolated(rows) {
 function lcNote(data) {
     const note = document.getElementById("chart-trend-note");
     if (!note) return;
-    note.textContent = data.repShare !== null && data.repShare > 0.3
+    note.textContent = data.repShare !== null && !data.fadeRep
         ? "Many values of this indicator repeat for 3 or more years, so they are not drawn lighter."
         : "";
 }
