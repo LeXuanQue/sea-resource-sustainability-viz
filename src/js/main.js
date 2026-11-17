@@ -104,9 +104,8 @@ function syncControls(s, ind) {
 function buildNote(ind, s, snap) {
     const n = snap ? snap.n : 0;
     const parts = [`${ind.unit}, ${s.year}`];
-    parts.push(`dashed line is the median of the ${n} countries reporting, Viet Nam included`);
     if (n >= 3) {
-        parts.push(`dashed line is the median of the ${n} countries reporting`);
+        parts.push(`dashed line is the median of the ${n} countries reporting, Viet Nam included`);
     } else {
         parts.push(`only ${n} countries reporting, not enough to compute a median`);
     }
