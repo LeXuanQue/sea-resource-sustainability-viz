@@ -1,4 +1,3 @@
-// Initial skeleton. Hoàng Quân owns interactions and layer transitions, Xuân Quế owns the main charts.
 // Wires data, state, controls and charts together.
 // The browser only filters and sorts here. Median, rank, verdict, gap and n
 // are read from snapshot.json, never recomputed.
@@ -7,6 +6,9 @@ let appData = null;
 let rowIndex = new Map(); // "indicator|country|year" -> row
 
 const $ = sel => document.querySelector(sel);
+
+// Repeated values (rep) are drawn lighter only if the indicator's repShare is at most this.
+const REP_FADE_MAX = 0.5;
 
 /** Set text on an optional element; do nothing if it is not in the page. */
 function setText(sel, text) {
@@ -104,7 +106,7 @@ function buildNote(ind, s, snap) {
     const parts = [`${ind.unit}, ${s.year}`];
     parts.push(ind.direction === "none" ? "not ranked, sorted by value" : "best at top");
     if (n >= 3) {
-        parts.push(`dashed line is the median of the ${n} countries reporting`);
+        parts.push(`dashed line is the median of the ${n} countries reporting, Viet Nam included`);
     } else {
         parts.push(`only ${n} countries reporting, not enough to compute a median`);
     }
@@ -162,12 +164,14 @@ function getLineData(s, ind) {
         median.push({ y, v: sy && sy.n >= 3 ? sy.median : null, n: sy ? sy.n : 0 });
     }
 
-    // repShare <= 0.3: fade repeated points; > 0.3: one general note instead.
-    // ASSUMPTION: location of repShare in coverage.json; check data/README.md.
-    const cov = appData.coverage[s.indicator] || {};
-    const repShare = cov.repShare ?? 0;
+    // repShare <= REP_FADE_MAX (0.5): fade repeated points; above it: one general note instead.
+    // repShare is a field of each indicator in values.json (indicators[].repShare).
+    const repShare = typeof ind.repShare === "number" ? ind.repShare : null;
+    if (repShare === null) {
+        console.warn(`getLineData: indicator '${ind.id}' has no repShare in values.json.`);
+    }
 
-    return { indicator: ind, country: s.country, series, median, fadeRep: repShare <= 0.3, repShare };
+    return { indicator: ind, country: s.country, series, median, fadeRep: repShare !== null && repShare <= REP_FADE_MAX, repShare };
 }
 
 function render(s) {
@@ -198,6 +202,3 @@ function render(s) {
 }
 
 main();
-
-// JSON data is exported into the data/ folder by Lê Quân (see data/README.md).
-// Example: fetch('../data/indicators.json').then(r => r.json()).then(init);
