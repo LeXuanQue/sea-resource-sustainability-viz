@@ -5,7 +5,7 @@
 This file DELIBERATELY does NOT import `indicators.py` and does NOT import any function from
 `build_data.py`. The 12-indicator table below is RETYPED BY HAND from the table in
 `data/README.md` and from the proposal. If `indicators.py` has a mistyped number
-(decimals, tol, year range, direction), this file will catch it, because the two
+(decimals, level threshold, year range, direction), this file will catch it, because the two
 do not share a source.
 
 The computation also deliberately differs from `build_data.py`:
@@ -30,23 +30,23 @@ from fractions import Fraction
 
 # =====================================================================
 # EXPECTED TABLE -- RETYPED BY HAND from data/README.md and the proposal.
-# Column order: id, World Bank code, direction, level mode, tol, decimals,
+# Column order: id, World Bank code, direction, level rel, level floor, decimals,
 #               first year, last year
 # MUST NOT be copied from indicators.py.
 # =====================================================================
 SPEC = [
-    ("forest_area",            "AG.LND.FRST.ZS",    "higher", "abs", 3,    1, 1990, 2022),
-    ("tree_cover_loss",        "AG.LND.FRLS.HA",    "none",   None, None,  0, 2002, 2021),
-    ("protected_areas",        "ER.PTD.TOTL.ZS",    "higher", "abs", 3,    1, 2013, 2023),
-    ("resource_depletion",     "NY.ADJ.DRES.GN.ZS", "lower",  "abs", 1.0,  2, 1990, 2021),
-    ("net_forest_depletion",   "NY.ADJ.DFOR.GN.ZS", "lower",  "abs", 1.0,  2, 1990, 2021),
-    ("freshwater_withdrawals", "ER.H2O.FWTL.ZS",    "lower",  "abs", 3,    1, 1990, 2021),
-    ("energy_intensity",       "EG.EGY.PRIM.PP.KD", "lower",  "rel", 0.05, 1, 2000, 2022),
-    ("renewable_energy",       "EG.FEC.RNEW.ZS",    "higher", "abs", 3,    1, 1990, 2022),
-    ("renewable_electricity",  "EG.ELC.RNEW.ZS",    "higher", "abs", 3,    1, 1990, 2021),
-    ("energy_use_per_person",  "EG.USE.PCAP.KG.OE", "none",   None, None,  0, 1990, 2022),
-    ("fossil_fuel",            "EG.USE.COMM.FO.ZS", "lower",  "abs", 3,    1, 1990, 2022),
-    ("coal_electricity",       "EG.ELC.COAL.ZS",    "lower",  "abs", 3,    1, 1990, 2022),
+    ("forest_area",            "AG.LND.FRST.ZS",    "higher", 0.03, 1,    1, 1990, 2022),
+    ("tree_cover_loss",        "AG.LND.FRLS.HA",    "none",   None, None, 0, 2002, 2021),
+    ("protected_areas",        "ER.PTD.TOTL.ZS",    "higher", 0.03, 1,    1, 2013, 2023),
+    ("resource_depletion",     "NY.ADJ.DRES.GN.ZS", "lower",  0.03, 0.5,  2, 1990, 2021),
+    ("net_forest_depletion",   "NY.ADJ.DFOR.GN.ZS", "lower",  0.03, 0.5,  2, 1990, 2021),
+    ("freshwater_withdrawals", "ER.H2O.FWTL.ZS",    "lower",  0.03, 1,    1, 1990, 2021),
+    ("energy_intensity",       "EG.EGY.PRIM.PP.KD", "lower",  0.03, 0,    1, 2000, 2022),
+    ("renewable_energy",       "EG.FEC.RNEW.ZS",    "higher", 0.03, 1,    1, 1990, 2022),
+    ("renewable_electricity",  "EG.ELC.RNEW.ZS",    "higher", 0.03, 1,    1, 1990, 2021),
+    ("energy_use_per_person",  "EG.USE.PCAP.KG.OE", "none",   None, None, 0, 1990, 2022),
+    ("fossil_fuel",            "EG.USE.COMM.FO.ZS", "lower",  0.03, 1,    1, 1990, 2022),
+    ("coal_electricity",       "EG.ELC.COAL.ZS",    "lower",  0.03, 1,    1, 1990, 2022),
 ]
 
 # Team display names. The CSV says "Lao PDR"; the team shows "Laos".
@@ -168,7 +168,7 @@ def check_metadata(report, values, specs_present):
                  f"country list differs (including order): {got_countries}")
 
     by_id = {i["id"]: i for i in values.get("indicators", [])}
-    for ind_id, code, direction, mode, tol, decimals, y0, y1 in specs_present:
+    for ind_id, code, direction, rel, floor, decimals, y0, y1 in specs_present:
         got = by_id.get(ind_id)
         if not report.check(got is not None,
                             f"{ind_id}: missing from values.json/indicators"):
@@ -181,14 +181,14 @@ def check_metadata(report, values, specs_present):
                      f"{ind_id}.decimals = {got['decimals']}, expected {decimals}")
         report.check(got["years"] == [y0, y1],
                      f"{ind_id}.years = {got['years']}, expected {[y0, y1]}")
-        if mode is None:
+        if rel is None:
             report.check(got["verdict"] is None,
                          f"{ind_id}.verdict = {got['verdict']}, expected null "
                          f"(direction none)")
         else:
-            report.check(got["verdict"] == {"mode": mode, "tol": tol},
+            report.check(got["verdict"] == {"rel": rel, "floor": floor},
                          f"{ind_id}.verdict = {got['verdict']}, "
-                         f"expected {{'mode': {mode!r}, 'tol': {tol}}}")
+                         f"expected {{'rel': {rel}, 'floor': {floor}}}")
 
 
 def check_rows(report, values, raw, specs_present):
@@ -266,7 +266,7 @@ def check_rows(report, values, raw, specs_present):
 
 
 def recompute_rep(raw, country, ind_id, years):
-    """Set of years inside a run of >= 3 consecutive years with the same RAW value.
+    """Set of years inside a run of >= 3 consecutive years with the same non-zero RAW value.
 
     Structure differs from `build_data.py`: here we jump over whole runs (find the full run of
     equal values, then decide), instead of accumulating year by year. Null breaks a run.
@@ -275,7 +275,9 @@ def recompute_rep(raw, country, ind_id, years):
     repeated = set()
     start = 0
     while start < len(sequence):
-        if sequence[start] is None:
+        # Null and exact zero never start a run (zero is a real value, not a
+        # carried-forward estimate; team decision 2026-11-16).
+        if sequence[start] is None or to_fraction(sequence[start]) == 0:
             start += 1
             continue
         end = start
@@ -289,7 +291,7 @@ def recompute_rep(raw, country, ind_id, years):
 
 def check_snapshot(report, snapshot, raw, specs_present):
     """median, n, rank, verdict, gap, the n < 3 rule, direction none, latestYear."""
-    for ind_id, _, direction, mode, tol, decimals, y0, y1 in specs_present:
+    for ind_id, _, direction, rel, floor, decimals, y0, y1 in specs_present:
         block = snapshot.get(ind_id)
         if not report.check(block is not None,
                             f"{ind_id}: missing from snapshot.json"):
@@ -379,10 +381,9 @@ def check_snapshot(report, snapshot, raw, specs_present):
                              f"recomputed gives {better + 1}")
 
                 # --- verdict
-                if mode == "abs":
-                    threshold = Fraction(str(tol))
-                else:
-                    threshold = Fraction(str(tol)) * abs(to_fraction(str(median)))
+                # rule F: level when |gap| <= max(rel x |median|, floor)
+                threshold = max(Fraction(str(rel)) * abs(to_fraction(str(median))),
+                                Fraction(str(floor)))
                 gap_exact = to_fraction(str(gap))
                 if abs(gap_exact) <= threshold:
                     want = "level"

@@ -48,11 +48,20 @@ MIN_COUNTRIES_FOR_LATEST_YEAR = 6
 #   - match the indicator table in the README and the submitted proposal,
 #   - avoid early stretches where only 1-2 countries report (meaningless median).
 # The CSV's actual range is recorded in coverage.json so the report can explain it.
+# verdict = rule F (team decision 2026-11-13, deviation D1 from the proposal):
+#   a country is "level" with the median when
+#       |gap| <= max(rel x |median|, floor)
+#   rel = 0.03 for every ranked indicator (the proposal's "level within 3%").
+#   floor = 1 point for % share indicators, 0.5 point for % of GNI indicators,
+#   0 for energy_intensity (MJ per $, not a share: plain 3% relative).
+#   Why the floor: with 3% alone, an indicator whose median is small almost never
+#   reaches "level" (protected areas: median ~7, so 3% is +/-0.2 points).
+#   verdict = None for direction "none" (no rank, no verdict).
 INDICATORS = [
     {
         "id": "forest_area", "code": "AG.LND.FRST.ZS", "name": "Forest area",
         "group": "resource", "unit": "% of land area",
-        "direction": "higher", "verdict": {"mode": "abs", "tol": 3},
+        "direction": "higher", "verdict": {"rel": 0.03, "floor": 1},
         "decimals": 1, "years": [1990, 2022],
     },
     {
@@ -65,63 +74,57 @@ INDICATORS = [
         "id": "protected_areas", "code": "ER.PTD.TOTL.ZS",
         "name": "Protected areas, land and marine",
         "group": "resource", "unit": "% of territory",
-        "direction": "higher", "verdict": {"mode": "abs", "tol": 3},
+        "direction": "higher", "verdict": {"rel": 0.03, "floor": 1},
         "decimals": 1, "years": [2013, 2023],
     },
     {
         "id": "resource_depletion", "code": "NY.ADJ.DRES.GN.ZS",
         "name": "Natural resources depletion",
         "group": "resource", "unit": "% of GNI",
-        # Changed from "rel 0.05" to "abs 1.0" (team decision 2026-10-08).
-        # Reasons in docs/data-notes.md section 4c. Summary: for resource_depletion,
-        # the yearly median is only 1.01-6.88 but the median |gap| is 2.95, so a
-        # 5% relative threshold (0.05-0.34) is almost 10 times smaller than a typical
-        # gap and "level with the median" is almost never reached (only 11/251 cells).
-        # For net_forest_depletion, the median is 0 in all 32 years, so a relative
-        # threshold is always tol * 0 = 0 FOR ANY tol -- a degenerate case.
-        "direction": "lower", "verdict": {"mode": "abs", "tol": 1.0},
+        # % of GNI: floor 0.5 points instead of 1 (rule F, team decision 2026-11-13).
+        # A relative threshold alone breaks here: the median is small, and for
+        # net_forest_depletion it is 0 in every year, so 3% x 0 = 0. See
+        # docs/data-notes.md section 4c.
+        "direction": "lower", "verdict": {"rel": 0.03, "floor": 0.5},
         "decimals": 2, "years": [1990, 2021],
     },
     {
         "id": "net_forest_depletion", "code": "NY.ADJ.DFOR.GN.ZS",
         "name": "Net forest depletion",
         "group": "resource", "unit": "% of GNI",
-        # Changed from "rel 0.05" to "abs 1.0" (team decision 2026-10-08).
-        # Reasons in docs/data-notes.md section 4c. Summary: for resource_depletion,
-        # the yearly median is only 1.01-6.88 but the median |gap| is 2.95, so a
-        # 5% relative threshold (0.05-0.34) is almost 10 times smaller than a typical
-        # gap and "level with the median" is almost never reached (only 11/251 cells).
-        # For net_forest_depletion, the median is 0 in all 32 years, so a relative
-        # threshold is always tol * 0 = 0 FOR ANY tol -- a degenerate case.
-        "direction": "lower", "verdict": {"mode": "abs", "tol": 1.0},
+        # % of GNI: floor 0.5 points instead of 1 (rule F, team decision 2026-11-13).
+        # A relative threshold alone breaks here: the median is small, and for
+        # net_forest_depletion it is 0 in every year, so 3% x 0 = 0. See
+        # docs/data-notes.md section 4c.
+        "direction": "lower", "verdict": {"rel": 0.03, "floor": 0.5},
         "decimals": 2, "years": [1990, 2021],
     },
     {
         "id": "freshwater_withdrawals", "code": "ER.H2O.FWTL.ZS",
         "name": "Annual freshwater withdrawals",
         "group": "resource", "unit": "% of internal resources",
-        "direction": "lower", "verdict": {"mode": "abs", "tol": 3},
+        "direction": "lower", "verdict": {"rel": 0.03, "floor": 1},
         "decimals": 1, "years": [1990, 2021],
     },
     {
         "id": "energy_intensity", "code": "EG.EGY.PRIM.PP.KD",
         "name": "Energy intensity of primary energy",
         "group": "energy", "unit": "MJ per $2017 PPP GDP",
-        "direction": "lower", "verdict": {"mode": "rel", "tol": 0.05},
+        "direction": "lower", "verdict": {"rel": 0.03, "floor": 0},
         "decimals": 1, "years": [2000, 2022],
     },
     {
         "id": "renewable_energy", "code": "EG.FEC.RNEW.ZS",
         "name": "Renewable energy consumption",
         "group": "energy", "unit": "% of final energy",
-        "direction": "higher", "verdict": {"mode": "abs", "tol": 3},
+        "direction": "higher", "verdict": {"rel": 0.03, "floor": 1},
         "decimals": 1, "years": [1990, 2022],
     },
     {
         "id": "renewable_electricity", "code": "EG.ELC.RNEW.ZS",
         "name": "Renewable electricity output",
         "group": "energy", "unit": "% of electricity",
-        "direction": "higher", "verdict": {"mode": "abs", "tol": 3},
+        "direction": "higher", "verdict": {"rel": 0.03, "floor": 1},
         "decimals": 1, "years": [1990, 2021],
     },
     {
@@ -135,14 +138,14 @@ INDICATORS = [
         "id": "fossil_fuel", "code": "EG.USE.COMM.FO.ZS",
         "name": "Fossil fuel energy consumption",
         "group": "energy", "unit": "% of total energy",
-        "direction": "lower", "verdict": {"mode": "abs", "tol": 3},
+        "direction": "lower", "verdict": {"rel": 0.03, "floor": 1},
         "decimals": 1, "years": [1990, 2022],
     },
     {
         "id": "coal_electricity", "code": "EG.ELC.COAL.ZS",
         "name": "Electricity from coal",
         "group": "energy", "unit": "% of electricity",
-        "direction": "lower", "verdict": {"mode": "abs", "tol": 3},
+        "direction": "lower", "verdict": {"rel": 0.03, "floor": 1},
         "decimals": 1, "years": [1990, 2022],
     },
 ]
