@@ -101,17 +101,17 @@ function syncControls(s, ind) {
     $("#btn-back").classList.toggle("hidden", s.country === DEFAULT_COUNTRY);
 }
 
-104  function buildNote(ind, s, snap) {
-105      const n = snap ? snap.n : 0;
-106      const parts = [`${ind.unit}, ${s.year}`];
-107      parts.push(ind.direction === "none" ? "not ranked, sorted by value" : "best at top");   // dòng mới
-108      if (n >= 3) {
-109          parts.push(`dashed line is the median of the ${n} countries reporting, Viet Nam included`);
-110      } else {
-111          parts.push(`only ${n} countries reporting, not enough to compute a median`);
-112      }
-113      return { text: parts.join(" · "), partial: n < 8 };
-114  }
+function buildNote(ind, s, snap) {
+    const n = snap ? snap.n : 0;
+    const parts = [`${ind.unit}, ${s.year}`];
+    parts.push(ind.direction === "none" ? "not ranked, sorted by value" : "best at top");
+    if (n >= 3) {
+        parts.push(`dashed line is the median of the ${n} countries reporting, Viet Nam included`);
+    } else {
+        parts.push(`only ${n} countries reporting, not enough to compute a median`);
+    }
+    return { text: parts.join(" · "), partial: n < 8 };
+}
 
 /** Data for the bar chart: one entry per country, already ordered. */
 function getBarData(s, ind, snap) {
