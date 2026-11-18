@@ -242,7 +242,7 @@ function drawBarChart(svgEl, data, options = {}) {
             .attr("class", "bar-median")
             .attr("pointer-events", "none");
         median.append("line")
-            .attr("class", "line-median")
+            .attr("class", "median-line")
             .attr("x1", mx).attr("x2", mx)
             .attr("y1", -10).attr("y2", innerH);
         median.append("text")

@@ -286,13 +286,38 @@ h1 {
 .mark-selected { fill: var(--color-selected); stroke: var(--color-selected); }
 .mark-other { fill: var(--color-other); stroke: var(--color-other); }
 .mark-nodata { fill: var(--color-nodata); stroke: var(--color-nodata); }
-.line-median {
+/* Regional median line: dashed, used by the bar chart and the line chart */
+.median-line {
   fill: none;
   stroke: var(--color-median);
   stroke-width: 1.5;
   stroke-dasharray: 5 4;
 }
 .is-rep { opacity: 0.45; } /* value repeated for 3+ years, only when repShare <= 0.3 */
+
+/* Line chart (src/js/line-chart.js): country lines are solid, the median stays dashed */
+.line {                       /* other countries */
+  fill: none;
+  stroke: var(--color-other);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.line-vn { stroke: var(--color-vn); stroke-width: 2.5; }
+.line-selected { stroke: var(--color-selected); stroke-width: 2.5; }
+.line-rep { opacity: 0.45; }  /* segment joining two repeated values, only when repShare <= 0.3 */
+
+.dot {                        /* one hoverable dot per year with a value */
+  fill: var(--color-other);
+  stroke: var(--color-surface);
+  stroke-width: 1px;
+  r: 3px;
+  cursor: default;
+}
+.dot-vn { fill: var(--color-vn); }
+.dot-selected { fill: var(--color-selected); }
+.dot-single { r: 4.5px; }     /* year with no neighbour, so no line is drawn to it */
+.median-dot { fill: var(--color-median); }
 
 .chart .axis text {
   font-family: var(--font-body);
