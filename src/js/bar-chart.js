@@ -21,7 +21,7 @@ const BAR_MARGIN = { top: 30, right: 80, bottom: 60, left: 116 };
 
 const BAR_VN_CODE = "VNM";
 const BAR_MEDIAN_MIN_N = 3;     // no median line when fewer than 3 countries report
-const BAR_REP_FADE_MAX = 0.3;   // fade repeated values only when repShare <= 0.3 (data/README.md)
+const BAR_REP_FADE_MAX = 0.5;   // fade repeated values only when repShare <= 0.5 (data/README.md)
 
 const BAR_VERDICT_LABEL = {
     better: "Better than median",
