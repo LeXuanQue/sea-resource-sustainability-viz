@@ -293,7 +293,7 @@ h1 {
   stroke-width: 1.5;
   stroke-dasharray: 5 4;
 }
-.is-rep { opacity: 0.45; } /* value repeated for 3+ years, only when repShare <= 0.3 */
+.is-rep { opacity: 0.45; } /* value repeated for 3+ years, only when repShare <= 0.5 */
 
 /* Line chart (src/js/line-chart.js): country lines are solid, the median stays dashed */
 .line {                       /* other countries */
@@ -305,7 +305,7 @@ h1 {
 }
 .line-vn { stroke: var(--color-vn); stroke-width: 2.5; }
 .line-selected { stroke: var(--color-selected); stroke-width: 2.5; }
-.line-rep { opacity: 0.45; }  /* segment joining two repeated values, only when repShare <= 0.3 */
+.line-rep { opacity: 0.45; }  /* segment joining two repeated values, only when repShare <= 0.5 */
 
 .dot {                        /* one hoverable dot per year with a value */
   fill: var(--color-other);
