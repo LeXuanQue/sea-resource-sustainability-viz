@@ -20,7 +20,8 @@ function setText(sel, text) {
 const REQUIRED_IDS = [
     "indicator-select", "year-slider", "year-label", "country-select",
     "chart-title", "chart-note", "chart-region", "chart-trend",
-    "tooltip", "btn-back", "source-note"
+    "tooltip", "btn-back", "source-note",
+    "country-title", "country-subtitle", "country-cards-resource", "country-cards-energy"
 ];
 
 /** Fail with a clear message if index.html is missing a contract element. */
@@ -174,6 +175,27 @@ function getLineData(s, ind) {
     return { indicator: ind, country: s.country, series, median, fadeRep: repShare !== null && repShare <= REP_FADE_MAX, repShare };
 }
 
+/** Data for the M2 cards: one entry per indicator, for the selected country and year. */
+function getCardData(s) {
+    const country = countryByCode[s.country];
+    const cards = appData.values.indicators.map(ind => {
+        // An indicator that stops before the shared year shows its own last year;
+        // one that starts after it, or has no value, shows "no data" (never zero).
+        const year = Math.min(s.year, ind.years[1]);
+        const row = rowIndex.get(`${ind.id}|${s.country}|${year}`);
+        const snap = appData.snapshot[ind.id].years[String(year)];
+        const cmp = (snap && snap.countries[s.country]) || {};
+        return {
+            indicator: ind, group: ind.group, year,
+            v: row ? row.v : null, rep: row ? row.rep : false,
+            n: snap ? snap.n : 0, median: snap ? snap.median : null,
+            rank: cmp.rank ?? null, verdict: cmp.verdict ?? null, gap: cmp.gap ?? null,
+            active: ind.id === s.indicator
+        };
+    });
+    return { year: s.year, country, cards };
+}
+
 function render(s) {
     const ind = indById[s.indicator];
     const snap = appData.snapshot[s.indicator].years[String(s.year)];
@@ -198,6 +220,19 @@ function render(s) {
         drawLineChart($("#chart-trend"), getLineData(s, ind), { selected: s.country });
     } else {
         console.warn("drawLineChart is not written yet (line-chart.js).");
+    }
+
+    $("#country-title").textContent = `${countryByCode[s.country].name} across all 12 indicators`;
+    $("#country-subtitle").textContent =
+        `${s.year} · an indicator that stops earlier shows its last year · rank among the countries reporting, verdict against the regional median · click a card to open it`;
+    if (typeof drawCountryCards === "function") {
+        drawCountryCards(
+            { resource: $("#country-cards-resource"), energy: $("#country-cards-energy") },
+            getCardData(s),
+            { onSelect: id => setState({ indicator: id, year: state.year }) }
+        );
+    } else {
+        console.warn("drawCountryCards is not loaded yet (country-cards.js).");
     }
 }
 

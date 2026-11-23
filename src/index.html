@@ -75,6 +75,21 @@
         <p id="chart-trend-note" class="chart-note"></p>
       </section>
     </div>
+
+    <!-- M2 Country level: one card per indicator for the selected country and year.
+         country-cards.js fills the two lists, one per indicator group. -->
+    <section id="country-level" class="country-level" aria-labelledby="country-title">
+      <header class="panel-header">
+        <h2 id="country-title"></h2>
+        <p id="country-subtitle" class="panel-subtitle" aria-live="polite"></p>
+      </header>
+
+      <h3 id="country-group-resource-title" class="cards-group-title">Natural resources</h3>
+      <ul id="country-cards-resource" class="cards" aria-labelledby="country-group-resource-title"></ul>
+
+      <h3 id="country-group-energy-title" class="cards-group-title">Energy</h3>
+      <ul id="country-cards-energy" class="cards" aria-labelledby="country-group-energy-title"></ul>
+    </section>
   </main>
 
   <footer id="source-note" class="site-footer">
@@ -95,6 +110,7 @@
   <script src="js/state.js"></script>
   <script src="js/bar-chart.js"></script>
   <script src="js/line-chart.js"></script>
+  <script src="js/country-cards.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>
