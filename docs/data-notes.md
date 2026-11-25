@@ -276,11 +276,12 @@ the real download date -- exactly the evidence for why `mtime` must not be used.
 The page footer reads this field **directly from the JSON**; it is never typed by hand.
 If the date ever has to change (a new CSV is downloaded), edit **two places**: the
 `ACCESSED_DATE` constant in `scripts/indicators.py` and `SPEC_ACCESSED` in
-`scripts/verify_data.py`, then rerun `build_data.py` and `verify_data.py`
+`scripts/verify_data.py`, then rerun `build_data.py`, `verify_data.py` and `build_story.py`
 (the two places are deliberate, see section 5 item 10).
 
-`baseYear: 2010` is left as is and not used yet (only needed for the derived numbers in the
-story section, and the 1990 vs 2010 baseline has not been decided).
+`baseYear: 2010` is left as is and not used. The story section (`data/story.json`) uses
+1990 as its baseline, as decided in Task_Final: every change runs from 1990 to the last year
+with data.
 
 ### `repShare` -- share of `rep`-flagged cells, precomputed per indicator
 `repShare = (rep cells) / (cells with a value)`, rounded to **3 digits, half up**,

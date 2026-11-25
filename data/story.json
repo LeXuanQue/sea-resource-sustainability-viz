@@ -1,0 +1,68 @@
+{
+  "meta": {
+    "country": "VNM",
+    "source": "World Bank Sovereign ESG Data Framework",
+    "accessed": "2026-10-02",
+    "generatedBy": "scripts/build_story.py"
+  },
+  "kpis": {
+    "forest": {
+      "value": 18.4,
+      "unit": "pts",
+      "verdict": "better",
+      "years": [
+        1990,
+        2022
+      ]
+    },
+    "renewable": {
+      "value": -51.7,
+      "unit": "pts",
+      "verdict": "worse",
+      "years": [
+        1990,
+        2021
+      ]
+    },
+    "protected": {
+      "value": 2.9,
+      "unit": "%",
+      "verdict": "worse",
+      "years": [
+        2023
+      ]
+    }
+  },
+  "keys": {
+    "forest_val_1990": 28.8,
+    "forest_val_2022": 47.2,
+    "forest_change": 18.4,
+    "forest_median_1990": 61.2,
+    "forest_median_2022": 45.6,
+    "forest_verdict": "better",
+    "renewable_val_1990": 75.9,
+    "renewable_val_2021": 24.2,
+    "renewable_change": -51.7,
+    "renewable_gap_2010": -0.7,
+    "renewable_gap_2021": -1.9,
+    "renewable_verdict": "worse",
+    "renewable_elec_val": 41.2,
+    "renewable_elec_rank": 4,
+    "renewable_elec_verdict": "better",
+    "eria_biomass_1990": 49,
+    "eria_biomass_2019": 9,
+    "protected_val_2023": 2.9,
+    "protected_rank": 8,
+    "protected_median_2023": 7.1,
+    "protected_gap_2023": -4.2,
+    "protected_verdict": "worse",
+    "threshold_pct": 3,
+    "threshold_floor_pct": 1,
+    "threshold_floor_gni": 0.5,
+    "energy_intensity_pct": 3
+  },
+  "sources": {
+    "eria_biomass_1990": "ERIA (2019), Chapter 15 Sustainable Energy Supply, https://www.eria.org/uploads/19_ch_15-Sustainable-Energy-Supply.pdf",
+    "eria_biomass_2019": "ERIA (2019), Chapter 15 Sustainable Energy Supply, https://www.eria.org/uploads/19_ch_15-Sustainable-Energy-Supply.pdf"
+  }
+}
