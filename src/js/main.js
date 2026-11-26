@@ -109,7 +109,7 @@ function buildNote(ind, s, snap) {
     if (n >= 3) {
         parts.push(`dashed line is the median of the ${n} countries reporting, Viet Nam included`);
     } else {
-        parts.push(`only ${n} countries reporting, not enough to compute a median`);
+        parts.push(`only ${n} ${n === 1 ? "country" : "countries"} reporting, not enough to compute a median`);
     }
     return { text: parts.join(" · "), partial: n < 8 };
 }
